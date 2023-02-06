@@ -1,0 +1,6 @@
+include: "rules/compute-sv-counts-collapse.smk"
+
+rule all:
+	input:
+		"results/sv-count-comparison.pdf",
+		"results/length-distribution.pdf"

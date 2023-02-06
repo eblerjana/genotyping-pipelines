@@ -1,0 +1,23 @@
+
+# callsets to consider. vcf specifies the path to the VCF file, collapse specifies whether or not to collapse overlapping
+# variant alleles prior to evaluation
+
+callsets:
+ cactus-hg38:
+   vcf: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/population-typing/cactus-100000/merged-vcfs/filtered/all-samples_bi_all_lenient.vcf.gz"
+   collapse: True
+   reference: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/fasta/hg38.fa"
+ cactus-chm13:
+   vcf: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-chm13/results/population-typing/cactus-100000/merged-vcfs/filtered/all-samples_bi_all_lenient.vcf.gz"
+   collapse: True
+   reference: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-chm13/results/data/fasta/chm13.fa"
+ hgsvc:
+   vcf: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hgsvc/results/population-typing/hgsvc/merged-vcfs/filtered/all-samples_bi_all_lenient.vcf.gz"
+   collapse: False
+   reference: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/fasta/hg38.fa"
+ illumina:
+   vcf: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/input-vcfs/1KGP_3202.gatksv_svtools_novelins.freeze_V3.wAF.vcf.gz"
+   collapse: False
+   reference: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/fasta/hg38.fa"
+
+populations: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/resources/20130606_g1k_3202_samples_ped_population.ext.tsv"
