@@ -1,0 +1,61 @@
+
+### callsets to be used as input to PanGenie (multiple ones can be listed)
+
+callsets:
+ cactus-hg38:
+   multi: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/vcf/cactus-100000/cactus_filtered_ids.vcf.gz"
+   bi: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/vcf/cactus-100000/cactus_filtered_ids_biallelic.vcf.gz"
+   reference: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/fasta/hg38.fa"
+   variants:
+     - snp 
+     - indels
+     - large-deletion
+     - large-insertion
+     - large-complex
+   repeat_regions: "resources/ucsc-simple-repeats.bed"
+   leave_one_out_samples:
+     - HG00438
+     - HG02717
+     - HG00733
+     - NA20129
+     - HG03453
+
+
+# callsetname:
+#   # PanGenie-ready, multi-allelic VCF file
+#   multi: ""
+#   # PanGenie-ready, bi-allelic VCF file
+#   bi: ""
+#   # reference genome in FASTA format
+#   reference: ""
+#   # variants contained in the callset. Options are: snp|indels|large-deletion|large-insertion|large-complex
+#   variants:
+#     - snp 
+#     - indels
+#     - large-deletion
+#     - large-insertion
+#   # repeat annotations in BED format (see resources/ folder for GRCh38 and CHM13-based annotations)
+#   repeat_regions: ""
+#   # samples to run a leave-one-out experiment on
+#   leave_one_out_samples: []
+
+
+
+# read data. File required that specifies a sample name, path to FASTA/FASTQ data and superpopulation:
+# FamilyID	SampleID	FatherID	MotherID	Population	Superpopulation	Sample_Illumina
+reads: "resources/genotyping-pilot-reads.tsv"
+
+
+# PanGenie command. Different versions can be run by listing several commandlines
+pangenie:
+ pangenie.v100.subsample14: "singularity exec --bind /:/hilbert container-main.sif PanGenie"
+ pangenie.v201.subsample5: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 5"
+ pangenie.v201.subsample10: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 10"
+ pangenie.v201.subsample14: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie"
+ pangenie.v201.subsample25: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 25"
+ pangenie.v201.subsample45: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 45"
+ pangenie.v201.subsample88: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 88"
+
+
+# Downsampling coverages for leave-one-out experiment. If reads shall not be downsampled, leave empty.
+downsampling: []
