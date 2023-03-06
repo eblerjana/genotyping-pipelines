@@ -18,13 +18,13 @@ for callset in config['callsets'].keys():
 
 rule collect_samples:
 	input:
-		lambda wildcards: config['callsets'][wildcards.callset]['multi']
+		config['reads']
 	output:
 		all="results/population-typing/{callset}/sample-index.tsv",
 		related="results/population-typing/{callset}/sample-index-related.tsv",
 		unrelated="results/population-typing/{callset}/sample-index-unrelated.tsv"
 	run:
-		with open(output.all, 'w') as all_samples, open(output.related, 'w') as related_samples, open(output.unrelated, 'w') as unrelated_samples, gzip.open(input[0], 'r') as infile:
+		with open(output.all, 'w') as all_samples, open(output.related, 'w') as related_samples, open(output.unrelated, 'w') as unrelated_samples, open(input[0], 'r') as infile:
 			for line in infile:
 				if line.startswith("#"):
 					continue
@@ -266,7 +266,7 @@ rule annotate_variants:
 		runtime_hrs=1,
 		runtime_min=59
 	shell:
-		"bedtools annotate -i {input.vcf} -files {input.bed} | python3 workflow/scripts/annotate_repeats.py -names ucsc-repeats -format tsv > {output}"
+		"bedtools annotate -i {input.vcf} -files {input.bed} | python3 workflow/scripts/annotate_repeats.py -names repeats -format tsv > {output}"
 
 
 #################################################

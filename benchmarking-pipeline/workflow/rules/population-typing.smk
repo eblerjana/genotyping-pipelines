@@ -173,7 +173,7 @@ rule merge_vcfs_by_region_multi:
 rule create_file_list_bi:
 	input:
 		vcfs = lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/genotyping/{sample}_genotyping_bi_all.vcf.gz", sample=sorted(samples.keys())),
-		tbi = lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/genotyping/{sample}_genotyping_bi_all.vcf.gz.tbi", sample=sorted(samples.keys()))
+#		tbi = lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/genotyping/{sample}_genotyping_bi_all.vcf.gz.tbi", sample=sorted(samples.keys()))
 	output:
 		"results/population-typing/{callset}/{version}/{coverage}/bi_all_filelist.tsv"
 	run:
@@ -211,7 +211,7 @@ rule merge_vcfs_by_region_bi:
 rule concat_vcfs_filelist:
 	input:
 		vcfs = lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/merged-vcfs/region-wise/pangenie_merged_{{what}}_all_{region}.vcf.gz", region=regions[wildcards.callset]),
-		tbi = lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/merged-vcfs/region-wise/pangenie_merged_{{what}}_all_{region}.vcf.gz.tbi", region=regions[wildcards.callset])
+	#	tbi = lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/merged-vcfs/region-wise/pangenie_merged_{{what}}_all_{region}.vcf.gz.tbi", region=regions[wildcards.callset])
 	output:
 		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/concat_{what}_all_filelist.tsv"
 	run:
