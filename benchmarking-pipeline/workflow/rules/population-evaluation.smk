@@ -14,7 +14,7 @@ for callset in config['callsets'].keys():
 		if line.startswith("#CHROM"):
 			panel_samples[callset] = line.strip().split()[9:]
 			break
-
+print(len(cohort_samples))
 
 rule collect_samples:
 	input:
@@ -299,7 +299,8 @@ rule plot_statistics:
 	output:
 		"results/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv"
 	params:
-		outprefix="results/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all"
+		outprefix="results/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all",
+		threshold= 5 if len(cohort_samples) < 1000 else 50
 	log:
 		"results/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all.log"
 	conda:
@@ -309,5 +310,5 @@ rule plot_statistics:
 		runtime_hrs=8,
 		runtime_min=59
 	shell:
-		"python3 workflow/scripts/analysis.py {input} {params.outprefix} &> {log}"
+		"python3 workflow/scripts/analysis.py {input} {params.outprefix} {params.threshold} &> {log}"
 

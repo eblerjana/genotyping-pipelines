@@ -14,7 +14,7 @@ def plot_concordances_all(files, outname, sources):
 		'large-complex': 'SV complex (>=50bp)'
 		}
 
-	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080']
+	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080', '#f7ce37']
 	type_to_file = {}
 	n_rows = 4
 	n_cols = 5
@@ -80,7 +80,7 @@ def plot_untyped_all(files, outname, sources):
 		'large-complex': 'SV complex (>=50bp)'
 		}
 
-	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080']
+	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080', '#f7ce37']
 	type_to_file = {}
 	n_rows = 4
 	n_cols = 5
@@ -146,7 +146,7 @@ def plot_fscores_all(files, outname, sources):
 		'large-complex': 'SV complex (>=50bp)'
 		}
 
-	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080']
+	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080', '#f7ce37']
 	type_to_file = {}
 	n_rows = 4
 	n_cols = 5
