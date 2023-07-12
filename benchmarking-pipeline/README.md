@@ -12,7 +12,7 @@ This pipeline can be used to perform different genotyping experiments with PanGe
 
 ## How to set up
 
-In order to run the pipeline, paths to required input data must be provided in the config file as explained below. Required is a PanGenie-ready input VCF (annotated multi-allelic and bi-allelic versions), as provided here: TODO, or as produced by this pipeline: TODO. The following sections in the config file need to be filled:
+In order to run the pipeline, paths to required input data must be provided in the config file as explained below. Required is a PanGenie-ready input VCF (annotated multi-allelic and bi-allelic versions), as provided below in section "Existing datasets", or as produced by this pipeline: https://bitbucket.org/jana_ebler/vcf-merging/src/master/. The following sections in the config file need to be filled:
 
 
 ```yaml
@@ -97,18 +97,17 @@ downsampling:
  - 20
 ```
 
+## Existing datasets
 
-We have already produced input reference panels for several datasets from high-quality, haplotype-resolved assemblies that can be used as input to PanGenie. They are available from here:
 
-- HGSVC (GRCh38, 64 haplotypes): 
-  - multi-allelic VCF (graph): http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC2/release/v2.0/PanGenie_PAV-panel/20210311_pav-panel-freeze4.vcf.gz
-  - bi-allelic VCF (callset): TODO
-- HPRC (GRCh38, 88 haplotypes): 
-  - multi-allelic VCF (graph): https://zenodo.org/record/6797328/files/cactus_filtered_ids.vcf.gz?download=1
-  - bi-allelic VCF (callset): TODO
-- HPRC (CHM13, 88 haplotypes): 
-  - multi-allelic (graph): https://zenodo.org/record/7660118/files/cactus_filtered_ids_chm13.vcf.gz?download=1
-  - bi-allelic (callset): TODO
+We have already produced input reference panels for several datasets from high-quality, haplotype-resolved assemblies that can be used as input to PanGenie and this pipeline. They are available from here:
+
+| Dataset | PanGenie input VCF        |  Callset VCF         | 
+|-------------| :-------------: |:-------------:| 
+| HGSVC-GRCh38 (freeze3, 64 haplotypes) | [graph-VCF](https://zenodo.org/record/7763717/files/pav-panel-freeze3.vcf.gz?download=1) | [callset-VCF](https://zenodo.org/record/7763717/files/pav-calls-freeze3.vcf.gz?download=1) | 
+| HGSVC-GRCh38 (freeze4, 64 haplotypes) |  [graph-VCF](https://zenodo.org/record/7763717/files/pav-panel-freeze4.vcf.gz?download=1)     | [callset-VCF](https://zenodo.org/record/7763717/files/pav-calls-freeze4.vcf.gz?download=1) | 
+| HPRC-GRCh38 (88 haplotypes) | [graph-VCF](https://zenodo.org/record/6797328/files/cactus_filtered_ids.vcf.gz?download=1)     |  [callset-VCF](https://zenodo.org/record/6797328/files/cactus_filtered_ids_biallelic.vcf.gz?download=1)    | 
+| HPRC-CHM13 (88 haplotypes) | [graph-VCF](https://zenodo.org/record/7839719/files/chm13_cactus_filtered_ids.vcf.gz?download=1) | [callset-VCF](https://zenodo.org/record/7839719/files/chm13_cactus_filtered_ids_biallelic.vcf.gz?download=1)   | 
 
 
 
