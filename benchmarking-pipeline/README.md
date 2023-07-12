@@ -12,7 +12,7 @@ This pipeline can be used to perform different genotyping experiments with PanGe
 
 ## How to set up
 
-In order to run the pipeline, paths to required input data must be provided in the config file as explained below. Required is a PanGenie-ready input VCF (annotated multi-allelic and bi-allelic versions), as provided below in section "Existing datasets", or as produced by this pipeline: https://bitbucket.org/jana_ebler/vcf-merging/src/master/. The following sections in the config file need to be filled:
+In order to run the pipeline, paths to required input data must be provided in the config file as explained below. Required is a PanGenie-ready input VCF (annotated multi-allelic and bi-allelic versions) as provided below in section "Existing datasets", or as produced by this pipeline: https://bitbucket.org/jana_ebler/vcf-merging/src/master/. See Section "Required input data" and the examples below for details on the required input data. The following sections in the config file need to be filled:
 
 
 ```yaml
@@ -42,10 +42,10 @@ callsetname:
 # SampleID: name of the child sample
 # FatherID: name of the father (0 if not available)
 # MotherID: name of the mother (0 if not available)
-# Population: which population the sample is from
+# Population: which population the sample is from (UNKNOWN if not known)
 # Superpopulation: which superpopulation (AFR, AMR, EAS, EUR, SAS)
 # Sample_Illumina: path to a FASTA/FASTQ file with Illumina reads of the child sample
-reads: "resources/genotyping-pilot-reads.tsv"
+reads: "reads.tsv"
 
 
 # PanGenie command. Different versions can be run by listing several commandlines.
@@ -65,9 +65,9 @@ For example:
 
 callsets:
  cactus-hg38:
-   multi: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/vcf/cactus-100000/cactus_filtered_ids.vcf.gz"
-   bi: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/vcf/cactus-100000/cactus_filtered_ids_biallelic.vcf.gz"
-   reference: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/fasta/hg38.fa"
+   multi: "cactus_filtered_ids.vcf.gz"
+   bi: "cactus_filtered_ids_biallelic.vcf.gz"
+   reference: "hg38.fa"
    variants:
      - snp 
      - indels
@@ -82,7 +82,7 @@ callsets:
      - NA20129
      - HG03453
    
-reads: "genotyping-reads.tsv"
+reads: "resources/genotyping-pilot-reads.tsv"
 
 
 # PanGenie command. Example on how to specify singularity containers to be used.
@@ -97,12 +97,44 @@ downsampling:
  - 20
 ```
 
+## Required input data
+
+### VCFs
+This pipeline requires two input VCFs: a multi-allelic VCF representing bubbles and haplotypes in a pangenome graph ("multi"), and a bi-allelic callset VCF describing the underlying variant alleles ("bi"). In the mult-allelic VCF, each record represents a bubble in the graph and lists all paths covered by at least one haplotypes as the alternative allele sequences. Each such alternative allele is annotated by a sequence of variant IDs (separated by a colon) in the INFO field, indicating which individual variant alleles it is composed of (since bubbles are usually composed of many individual variant alleles). The bi-allelic VCF contains one separate record for each such variant ID. See the figure below for an illustration. Both VCFs describe the same genetic variation, but using different ways of representation. In this pipeline, the multi-allelic VCFs are used as input to PanGenie for genotyping. Using the annotations, the resulting bubble genotypes can be translated into genotypes for each individual variant ID. This enables properly analysing variant alleles contained inside of bubbles.
+
+![VCF representations](images/vcfs.png)
+
+### reference 
+FASTA file containing the reference genome underlying the VCF.
+
+### reads
+A TSV file of the format shown below that provides paths to FASTA/FASTQ files with **short-read** sequencing data. One file per sample.
+
+```bat
+
+<FamilyID> <SampleID> <FatherID> <MotherID> <Sex> <Population> <Superpopulation> <SampleIllumina>
+
+```
+
+**FamilyID**: specifies the name of a trio  
+**SampleID**: name of the child sample  
+**FatherID**: name of the father (0 if not available)  
+**MotherID**: name of the mother (0 if not available)  
+**Population**: which population the sample is from (UNKNOWN if not known)  
+**Superpopulation**: which superpopulation (AFR, AMR, EAS, EUR, SAS)  
+**Sample_Illumina**: path to a FASTA/FASTQ file with Illumina reads of the child sample  
+
+See  `` resources/genotyping-pilot-reads.tsv `` for an example.
+
+### repeat regions
+BED file defining repeat regions. See `` resources/ `` folder for files that can be used for GRCh38 and CHM13 references.
+
+
 ## Existing datasets
 
+We have already produced input reference panels for several datasets from high-quality, haplotype-resolved assemblies that can be used as input to this pipeline. Existing datasets can be found here:
 
-We have already produced input reference panels for several datasets from high-quality, haplotype-resolved assemblies that can be used as input to PanGenie and this pipeline. They are available from here:
-
-| Dataset | PanGenie input VCF        |  Callset VCF         | 
+| Dataset | multi-allelic graph VCF        |  bi-allelic callset VCF         | 
 |-------------| :-------------: |:-------------:| 
 | HGSVC-GRCh38 (freeze3, 64 haplotypes) | [graph-VCF](https://zenodo.org/record/7763717/files/pav-panel-freeze3.vcf.gz?download=1) | [callset-VCF](https://zenodo.org/record/7763717/files/pav-calls-freeze3.vcf.gz?download=1) | 
 | HGSVC-GRCh38 (freeze4, 64 haplotypes) |  [graph-VCF](https://zenodo.org/record/7763717/files/pav-panel-freeze4.vcf.gz?download=1)     | [callset-VCF](https://zenodo.org/record/7763717/files/pav-calls-freeze4.vcf.gz?download=1) | 
