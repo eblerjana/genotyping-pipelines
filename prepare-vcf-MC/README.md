@@ -13,7 +13,14 @@ This pipeline was used in the HPRC paper (https://www.nature.com/articles/s41586
 
 ## Outputs
 
-* a **multi-allelic** graph VCF called `` results/vcf/{callsetname}/{callsetname}_filtered_ids.vcf`` that can be used as input to PanGenie
+* a **multi-allelic** graph VCF called `` results/vcf/{callsetname}/{callsetname}_filtered_ids.vcf`` representing bubbles in the graph
+
+* a **bi-allelic** callset VCF called `` results/vcf/{callsetname}/{callsetname}_filtered_ids_biallelic.vcf`` representing variant alleles contained in the graph
+
+
+### How to use the output VCFs with PanGenie
+
+The **multi-allelic** VCF can be used as input to PanGenie (https://github.com/eblerjana/pangenie/tree/master), e.g.:
 
 ``` bat
 
@@ -21,7 +28,7 @@ PanGenie -i <input-reads> -v results/vcf/{callsetname}/{callsetname}_filtered_id
 
 ```
 
-* a **bi-allelic** callset VCF called `` results/vcf/{callsetname}/{callsetname}_filtered_ids_biallelic.vcf`` that can be used to transform the genotypes computed by PanGenie for all bubbles to genotypes for all nested variant alleles using the command below and this script [convert-to-biallelic.py](https://bitbucket.org/jana_ebler/hprc-experiments/src/master/genotyping-experiments/workflow/scripts/convert-to-biallelic.py):
+VCFs produced by this pipeline contain special annotations in the INFO field ("ID"). In the multi-allelic VCF, each record defines a bubble in the pangenome graph. Each allele of a bubble is annotated by a sequence of IDs in the ID field, separated by a colon, which define variants nested inside of these bubbles. The bi-allelic VCF contains one record for each such individual ID. Both VCFs provide different representation of the same genetic variation present in the graph. After genotyping the bubbles with the command above, one can convert the bubble genotypes into genotypes for all nested variants using the script [convert-to-biallelic.py](https://bitbucket.org/jana_ebler/hprc-experiments/src/master/genotyping-experiments/workflow/scripts/convert-to-biallelic.py) and the following command:
 
 ``` bat
 
@@ -29,7 +36,13 @@ cat pangenie_genotyping.vcf | python3 convert-to-biallelic.py {callsetname}_filt
 
 ```
 
-## How to run
+This is often useful for evaluation of the genotypes, since bubbles are often really large and might contain hundreds of variants nested inside. In the bi-allelic VCF, all these nested variants will be listed, which makes comparison to existing callsets possible.
+
+**Note:** do not use the bi-allelic VCF as input to PanGenie since PanGenie needs the bubble information encoded in the multi-allelic VCF. Instead, use the stradegy above to derive genotypes for all variants in the bi-allelic VCF.
+
+
+
+## How to run the pipeline
 
 Prepare the `` config.yaml `` file by adding paths to the input VCF/GFA, as well as information on these datasets (like the number of samples, reference genome, etc.). Then run the pipeline:
 
