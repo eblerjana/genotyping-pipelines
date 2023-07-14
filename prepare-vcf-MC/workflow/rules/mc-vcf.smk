@@ -36,7 +36,7 @@ rule filter_bubbles:
 		mem_total_mb=50000
 	shell:
 		"""
-		{vcfbub} -l 0 {params.threshold} --input {input} | bgzip -c > {output}
+		{vcfbub} -l 0 {threshold} --input {input} | bgzip -c > {output}
 		tabix -p vcf {output}
 		"""
 
@@ -58,9 +58,9 @@ rule filter_vcf:
 		runtime_hrs=0,
 		runtime_min=59
 	params:
-		min_an = lambda wildcards: nr_samples[wildcards.callset][0],
-		min_an_male = lambda wildcards: nr_samples[wildcards.callset][1],
-		min_an_female = lambda wildcards: nr_samples[wildcards.callset][2]
+		min_an = lambda wildcards: nr_samples[wildcards.caller][0],
+		min_an_male = lambda wildcards: nr_samples[wildcards.caller][1],
+		min_an_female = lambda wildcards: nr_samples[wildcards.caller][2]
 	shell:
 		"bcftools view --samples ^{reference_to_ignore} {input} | bcftools view --min-ac 1 | python3 workflow/scripts/filter-vcf.py {min_an} {min_an_male} {min_an_female} --chromosomes {chromosomes} 2> {log} 1> {output}"
 
