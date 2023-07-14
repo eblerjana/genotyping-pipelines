@@ -36,7 +36,7 @@ rule filter_bubbles:
 		mem_total_mb=50000
 	shell:
 		"""
-		{vcfbub} -l 0 {threshold} --input {input} | bgzip -c > {output}
+		{vcfbub} -l 0 -r {threshold} --input {input} | bgzip -c > {output}
 		tabix -p vcf {output}
 		"""
 
