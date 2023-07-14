@@ -37,3 +37,7 @@ Prepare the `` config.yaml `` file by adding paths to the input VCF/GFA, as well
 snakemake -j <nr_cores>
 
 ```
+
+## NOTE
+
+This pipeline was specifically designed for the MC-graphs computed for HPRC. It requires the reference genome to be represented as a linear path through the graph, i.e. the reference genome is not allowed to loop back to itself. **Thus, this pipeline in its present form does not work for graphs produced by PGGB**.
