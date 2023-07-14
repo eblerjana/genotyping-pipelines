@@ -85,9 +85,14 @@ def parse_gfa(filename, segments = None):
 			if segments and fields[1] not in segments:
 				continue
 			ref_pos = None
-			# TODO this assumes that SO:i is always the fifth entry.. 
-			if len(fields) > 4 and fields[4].startswith('SO:i'):
-				ref_pos = fields[4].split(':')[-1]
+
+			# search for SO:i entry
+			so_entry = None
+			for f in fields:
+				if f.startswith('SO:i'):
+					so_entry = f
+			if len(fields) > 4 and so_entry:
+				ref_pos = so_entry.split(':')[-1]
 			node_to_data[fields[1]] = (ref_pos, fields[2])
 	return node_to_data
 
@@ -458,4 +463,5 @@ if __name__== "__main__":
 				print('Processed ' + str(records_read) + ' VCF records.')
 	print('Wrote ' + str(multi_written) + ' multi-allelic records.')
 	print('Wrote ' + str(bi_written) + ' bi-allelic records.')
+
 

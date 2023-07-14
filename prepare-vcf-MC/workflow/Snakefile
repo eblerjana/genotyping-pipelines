@@ -1,0 +1,10 @@
+configfile: "config.yaml"
+
+include: 'rules/mc-vcf.smk'
+
+callers = [k for k in config['vcf'].keys()]
+
+rule all:
+	input:
+		expand("results/vcf/{caller}/{caller}_filtered_ids.vcf", caller = callers),
+		expand("results/vcf/{caller}/{caller}_filtered_ids_biallelic.vcf", caller = callers)
