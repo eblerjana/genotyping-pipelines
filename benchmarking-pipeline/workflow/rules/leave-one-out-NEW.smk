@@ -392,6 +392,24 @@ rule plotting_versions:
 
 
 
+# plot results of different subsampling runs, comparing concordance and typed variants per sample
+rule plotting_versions_conc_vs_untyped:
+	input:
+		lambda wildcards: expand("results/leave-one-out/{{callset}}/{version}/plots/{{coverage}}/concordance_{{callset}}-{version}-{{coverage}}_{{regions}}_{vartype}.tsv", version=versions_leave_one_out, vartype=config['callsets'][wildcards.callset]['variants'])
+	output:
+		"results/leave-one-out/{callset}/plots/comparison-versions/concordance-vs-untyped/concordance-vs-untyped_{coverage}_{regions}.pdf"
+	wildcard_constraints:
+		regions="biallelic|multiallelic"
+	priority: 1
+	conda:
+		"../envs/genotyping.yml"
+	params:
+		sources = lambda wildcards: ' '.join([wildcards.callset + '-' + v + '-' + wildcards.coverage + '_' + wildcards.regions for v in versions_leave_one_out])
+	shell:
+		"python3 workflow/scripts/plot-results.py -files {input} -outname {output} -sources {params.sources} -metric concordance-vs-untyped"
+
+
+
 # plot results of different coverages
 rule plotting_coverages:
 	input:

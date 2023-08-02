@@ -48,13 +48,10 @@ reads: "resources/genotyping-pilot-reads.tsv"
 
 # PanGenie command. Different versions can be run by listing several commandlines
 pangenie:
- pangenie.v100.subsample14: "singularity exec --bind /:/hilbert container-main.sif PanGenie"
- pangenie.v201.subsample5: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 5"
- pangenie.v201.subsample10: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 10"
- pangenie.v201.subsample14: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie"
- pangenie.v201.subsample25: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 25"
- pangenie.v201.subsample45: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 45"
- pangenie.v201.subsample88: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 88"
+ pangenie.v211: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v211.sif PanGenie"
+
+# PanGenie command to be used for not yet released version of PanGenie (leave empty for now)
+pangenie-modules: []
 
 
 # Downsampling coverages for leave-one-out experiment. If reads shall not be downsampled, leave empty.

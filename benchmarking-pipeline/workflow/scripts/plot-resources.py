@@ -28,7 +28,7 @@ def extract_resources(filename):
 
 
 def plot_resources(files, outname, samples, sizes):
-	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080']
+	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080', '#f7ce37', '#bc202c', '#251188' ]
 	runtimes = {}
 	wallclock_times = {}
 	rss = {}

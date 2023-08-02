@@ -54,6 +54,9 @@ pangenie:
  pangenie.v201.subsample5: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 5"
 
 
+# PanGenie command to be used for not yet released version of PanGenie (leave empty for now)
+pangenie-modules: []
+
 # Downsampling coverages for leave-one-out experiment. If reads shall not be downsampled, leave empty.
 downsampling: []
 
@@ -90,6 +93,8 @@ pangenie:
  pangenie.v100: "singularity exec --bind /:/hilbert pangenie-v100.sif PanGenie"
  pangenie.v201: "singularity exec --bind /:/hilbert pangenie-v210.sif PanGenie"
 
+# PanGenie command to be used for not yet released version of PanGenie (leave empty for now)
+pangenie-modules: []
 
 # Downsampling coverages for leave-one-out experiment. This example downsamples reads to 10x and 20x and runs leave-one-out experiments on these coverages in addition to the full coverage data.
 downsampling:
