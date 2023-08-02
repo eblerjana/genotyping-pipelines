@@ -51,7 +51,7 @@ pangenie:
  pangenie.v211: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v211.sif PanGenie"
 
 # PanGenie command to be used for not yet released version of PanGenie (leave empty for now)
-pangenie-modules: []
+pangenie-modules: {}
 
 
 # Downsampling coverages for leave-one-out experiment. If reads shall not be downsampled, leave empty.
