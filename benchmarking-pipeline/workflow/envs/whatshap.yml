@@ -1,8 +1,8 @@
 name: whatshap
 channels:
-  - http://conda.repo.test.hhu.de/conda-forge
-  - http://conda.repo.test.hhu.de/bioconda
-  - http://conda.repo.test.hhu.de/main
+  - conda-forge
+  - bioconda
+  - main
 dependencies:
   - _libgcc_mutex=0.1=main
   - bcftools=1.10.2=h4f4756c_3
