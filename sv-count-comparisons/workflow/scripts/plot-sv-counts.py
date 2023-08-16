@@ -306,8 +306,8 @@ def parse_populations(filename):
 		if line.startswith('#'):
 			continue
 		fields = line.strip().split()
-		sample_name = fields[1]
-		population = fields[6]
+		sample_name = fields[0]
+		population = fields[1]
 		sample_to_pop[sample_name] = population
 	return sample_to_pop
 
