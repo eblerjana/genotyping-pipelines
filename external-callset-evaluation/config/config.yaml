@@ -1,0 +1,51 @@
+
+# path to reference genome fasta + fai
+reference: "test-reference.fa"
+reference_fai: "test-reference.fa.fai"
+
+# path to biallelic panel VCF (variants genotyped by the callers, biallelic)
+panel_vcf: "test-panel.vcf.gz"
+
+# lists infos and files for each truthset.
+truthsets:
+ dipcall-NA19240: # name of the truthset
+  path: "test-dipcall.vcf.gz" # path to truth set vcf
+  callable_regions: "test-dipcall.bed" # path to BED with callable regions
+  vartype: "sv" # variant type. Must be either "snp-indel" or "sv"
+  callsets: # lists callsets to be compared agains this truthset
+   pangenie-HG002: "test-pangenie.vcf.gz"
+
+# regions to evaluate in addition to all callable regions. You can use your own regions by providing the respective BEDs. If none, set ot {}
+regions_to_bed: {}
+# easy: "resources/GRCh38_notinalldifficultregions.bed"
+# lowmap: "resources/GRCh38_alllowmapandsegdupregions.bed"
+# other: "resources/GRCh38_allOtherDifficultregions.bed"
+# repeat: "resources/GRCh38_AllTandemRepeats_gt100bp_slop5.bed"
+
+
+
+
+## path to reference genome fasta + fai
+#reference: "path/to/reference.fa"
+#reference_fai: "path/to/reference.fa.fai"
+#
+## path to biallelic panel VCF (variants genotyped by the callers, biallelic format)
+#panel_vcf: "path/to/panel.vcf"
+#
+# lists infos and files for each truthset.
+#truthsets:
+# truthset-name: # name of the truthset
+#  path: "/path/to/truth.vcf.gz" # path to truth set vcf
+#  callable_regions: "/path/to/callable-regions.bed" # path to BED with callable regions
+#  vartype: "sv" # variant type. Must be either "snp-indel" or "sv"
+#  callsets: # callset vcfs to compare against this truthset
+#   callset1: "/path/to/callset1.vcf.gz"
+#   callset2: "/path/to/callset2.vcf.gz"
+#
+# regions to evaluate in addition to all callable regions (evaluation would happen in the )
+# You can use your own regions by providing the respective BEDs. If none, set ot {}
+#regions_to_bed: {}
+# easy: "resources/GRCh38_notinalldifficultregions.bed"
+# lowmap: "resources/GRCh38_alllowmapandsegdupregions.bed"
+# other: "resources/GRCh38_allOtherDifficultregions.bed"
+# repeat: "resources/GRCh38_AllTandemRepeats_gt100bp_slop5.bed"

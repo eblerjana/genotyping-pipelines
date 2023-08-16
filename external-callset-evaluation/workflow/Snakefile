@@ -1,0 +1,26 @@
+configfile: "config/config.yaml"
+include: 'rules/callset-comparisons.smk'
+
+truthsets_sv = [t for t in config["truthsets"].keys() if config["truthsets"][t]["vartype"] == "sv"]
+truthsets_small = [t for t in config["truthsets"].keys() if config["truthsets"][t]["vartype"] == "snp-indel"]
+regions = ['all'] + [r for r in config['regions_to_bed'].keys()]
+
+# generate all combinations of desired output files to be produced
+def output_files(wildcards):
+	filenames = []
+	for t in truthsets_small:
+		for c in config["truthsets"][t]["callsets"].keys():
+			for r in regions:
+				filenames.append("results/callset-comparisons/" + t + "/vcfeval_" + c + "_snp-indel_all_region-" + r + "/summary.txt")
+				filenames.append("results/callset-comparisons/" + t + "/vcfeval_" + c + "_snp-indel_typable_region-" + r + "/summary.txt")
+	for t in truthsets_sv:
+		for c in config["truthsets"][t]["callsets"].keys():
+			for r in regions:
+				filenames.append("results/callset-comparisons/" + t + "/truvari_" + c + "_sv_all_region-" + r + "/summary.txt")
+				filenames.append("results/callset-comparisons/" + t + "/truvari_" + c + "_sv_typable_region-" + r + "/summary.txt")
+	return filenames
+
+
+rule all:
+	input:
+		output_files
