@@ -5,6 +5,9 @@ This pipeline can be used to evaluate re-genotyping results with an external cal
 
 ## Why/when this pipeline is useful
 
+
+![alt text](images/overview.png)
+
 In a scenario where variants are discovered in a set of samples and then **re-genotyped** in a new sample (i.e. a sample not part of the discovery set), variants that are unique to that new sample will be missed, since re-genotyping tools typically only genotype the input variants and cannot discover new alleles. Therefore, if one wants to evaluate the set of genotypes for the new sample using an external callset resulting from variant calling on the same sample, one needs to take into account that the external callset contains variants that will not be captured by the re-genotyper (since they were not in the input set used for genotyping). This pipeline accounts for this by computing "adjusted" precision and recall values by determining variants that are unique to the genotyped sample (and thus untypable) and excludes them from precision/recall calculations.
 
 
