@@ -25,13 +25,13 @@ panel_vcf: "path/to/panel.vcf"
 
 # lists infos and files for each truthset.
 truthsets:
- truthset-name: # name of the truthset
+ <truthsetname>: # name of the truthset
   path: "/path/to/truth.vcf.gz" # path to truth set vcf
   callable_regions: "/path/to/callable-regions.bed" # path to BED with callable regions
   vartype: "sv" # variant type. Must be either "snp-indel" or "sv"
   callsets: # re-genotyped vcfs to compare against this truthset
-   callset1: "/path/to/callset1.vcf.gz"
-   callset2: "/path/to/callset2.vcf.gz"
+   <callsetname1>: "/path/to/callset1.vcf.gz"
+   <callsetname2>: "/path/to/callset2.vcf.gz"
 
 # regions to evaluate in addition to all callable regions 
 # in addition to evaluating all callable regions, this provides the option
