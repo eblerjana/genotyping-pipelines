@@ -57,4 +57,6 @@ Note that the truthsets need to either contains SNPs+indels or SVs. These two va
 ## Results
 
 The results of the pipeline are precision/recall statistics as well as VCF files containing true positives, false positives, false negatives. Results will be written to: 
-`` results/callset-comparisons/<truthset>/vcfeval_<callset>_<snp-indel|sv>_<all|typable>_region-<region>/ ``
+`` results/callset-comparisons/<truthset>/<vcfeval|truvari>_<callset>_<snp-indel|sv>_<all|typable>_region-<region>/ `` and precision and recall statistics can be found in a file called `` summary.txt `` in each of these folders.
+
+For SNP+indels callsets, vcfeval results will be procuded, for SV callsets, truvari results will be computed. Two versions of precision and recall will be computed: `` all `` corresponds to regular precision and recall statistics including all variants, `` typable `` will exclude all untypable variants (see above) from the truth set prior to evaluation, since these variants cannot be genotyped by a re-genotyper and would thus always be counted as false negatives.
