@@ -62,7 +62,7 @@ rule filter_vcf:
 		min_an_male = lambda wildcards: nr_samples[wildcards.caller][1],
 		min_an_female = lambda wildcards: nr_samples[wildcards.caller][2]
 	shell:
-		"bcftools view --samples ^{reference_to_ignore} {input} | bcftools view --min-ac 1 | python3 workflow/scripts/filter-vcf.py {min_an} {min_an_male} {min_an_female} --chromosomes {chromosomes} 2> {log} 1> {output}"
+		"bcftools view --samples ^{reference_to_ignore} --force-samples  {input} | bcftools view --min-ac 1 | python3 workflow/scripts/filter-vcf.py {min_an} {min_an_male} {min_an_female} --chromosomes {chromosomes} 2> {log} 1> {output}"
 
 
 # remove alternative alleles that are not covered by any haplotype
