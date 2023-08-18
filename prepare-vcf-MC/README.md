@@ -1,6 +1,6 @@
 # Create PanGenie-ready VCF from Minigraph-Cactus VCF
 
-This pipeline was used in the HPRC paper (https://www.nature.com/articles/s41586-023-05896-x) in order to generate PanGenie-ready VCFs from the Minigraph-Cactus VCFs (produced based on ``vg decompose``.
+This pipeline was used in the HPRC paper (https://www.nature.com/articles/s41586-023-05896-x) in order to generate PanGenie-ready VCFs from the Minigraph-Cactus VCFs for human (produced based on ``vg decompose``.
 
 ## What the pipeline can do
 
@@ -10,6 +10,7 @@ It performs the following steps:
 * remove bubbles for which more than 20% of the haplotypes carry a missing allele (".")
 * decompose bubbles to determine all nested variant alleles and annotate VCF accordingly
 
+The pipeline is designed for human data.
 
 ## How to set up
 
