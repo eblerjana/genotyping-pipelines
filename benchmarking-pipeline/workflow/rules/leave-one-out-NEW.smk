@@ -148,7 +148,7 @@ rule pangenie_modules:
 		"""
 		module load Singularity
 		(/usr/bin/time -v {params.pangenie}-index -v {input.vcf} -r /hilbert{input.fasta} -o {params.out_prefix} -t {threads} ) &> {log.index}
-		(/usr/bin/time -v {params.pangenie}-genotype -f {params.out_prefix} -i <(gunzip -c {input.reads}) -v {input.vcf} -r /hilbert{input.fasta} -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log.genotype}
+		(/usr/bin/time -v {params.pangenie} -f {params.out_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log.genotype}
 		"""
 
 
