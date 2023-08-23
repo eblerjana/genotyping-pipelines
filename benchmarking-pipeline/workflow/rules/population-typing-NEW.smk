@@ -128,9 +128,7 @@ rule genotyping_index:
 rule genotyping_genotype:
 	input:
 		directory("results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/"),
-		reads=lambda wildcards: samples[wildcards.sample][wildcards.coverage],
-		reference=lambda wildcards: config['callsets'][wildcards.callset]['reference'],
-		panel = "results/population-typing/{callset}/panel.vcf"
+		reads=lambda wildcards: samples[wildcards.sample][wildcards.coverage]
 	output:
 		genotyping_vcf = temp("results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_genotyping.vcf"),
 	log:
@@ -152,7 +150,7 @@ rule genotyping_genotype:
 	shell:
 		"""
 		module load Singularity
-		(/usr/bin/time -v {params.pangenie}-genotype -f {params.in_prefix} -i <(gunzip -c {input.reads}) -v {input.panel} -r /hilbert{input.reference} -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log}
+		(/usr/bin/time -v {params.pangenie} -f {params.in_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log}
 		"""
 
 
