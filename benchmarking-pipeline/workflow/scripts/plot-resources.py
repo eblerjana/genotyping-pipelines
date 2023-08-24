@@ -19,7 +19,7 @@ def extract_resources(filename):
 			max_rss = int(fields[-1])
 		elif line.strip().startswith("Elapsed (wall clock) time"):
 			times = [f for f in fields[-1].split(':')]
-			wallclock_time += int(times[-1]) + 60.0 * int(times[-2])
+			wallclock_time += float(times[-1]) + 60.0 * float(times[-2])
 			if len(times) > 2:
 				wallclock_time += int(times[-3]) * 3600.0
 		else:

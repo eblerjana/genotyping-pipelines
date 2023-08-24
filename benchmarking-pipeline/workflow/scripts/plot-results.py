@@ -168,6 +168,8 @@ def plot_fscores_all(files, outname, sources):
 			print('source', source)
 			samples = []
 			fscores = []
+			if not (source,var) in type_to_file:
+				continue
 			for line in open(type_to_file[(source,var)], 'r'):
 				if line.startswith('sample'):
 					continue
