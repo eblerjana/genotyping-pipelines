@@ -1,0 +1,13 @@
+configfile: "config/config.yaml"
+include: "rules/construct-panel.smk"
+
+modes = []
+if config["pangenie_multi_vcf"] != "":
+	modes.append("multi")
+if config["pangenie_bi_vcf"] != "":
+	modes.append("bi")
+
+
+rule all:
+	input:
+		expand("results/statistics_{mode}.txt", mode = modes)
