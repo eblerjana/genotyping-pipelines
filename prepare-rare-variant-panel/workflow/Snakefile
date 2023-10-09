@@ -1,5 +1,5 @@
 configfile: "config/config.yaml"
-include: "rules/construct-panel.smk"
+include: "rules/construct-panel-pseudo-haplotypes.smk"
 
 modes = []
 if config["pangenie_multi_vcf"] != "":
@@ -10,4 +10,5 @@ if config["pangenie_bi_vcf"] != "":
 
 rule all:
 	input:
-		expand("results/statistics_{mode}.txt", mode = modes)
+		expand("{outname}/rare-variants/rare-variants-pseudo-haplotypes.vcf", outname = config["outname"])
+#		expand("results/statistics_{mode}.txt", mode = modes)

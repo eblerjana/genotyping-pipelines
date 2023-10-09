@@ -1,3 +1,8 @@
-rare_variants_vcf: ""
-pangenie_multi_vcf: ""
-pangenie_bi_vcf: ""
+rare_variants_vcf: "test/rare-lpa.vcf.gz"
+pangenie_multi_vcf: "test/cactus-minigraph.lpa.vcf.gz"
+pangenie_bi_vcf: "test/cactus-minigraph.lpa.vcf.gz"
+outname: "test-results"
+
+
+
+
