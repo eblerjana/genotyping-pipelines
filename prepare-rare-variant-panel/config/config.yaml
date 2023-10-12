@@ -1,8 +1,5 @@
 rare_variants_vcf: "test/rare-lpa.vcf.gz"
-pangenie_multi_vcf: "test/cactus-minigraph.lpa.vcf.gz"
-pangenie_bi_vcf: "test/cactus-minigraph.lpa.vcf.gz"
+pangenie_multi_vcf: "test/lpa.vcf.gz"
+pangenie_bi_vcf: "test/lpa-bi.vcf.gz"
+reference: "hg38.fa"
 outname: "test-results"
-
-
-
-

@@ -10,5 +10,6 @@ if config["pangenie_bi_vcf"] != "":
 
 rule all:
 	input:
-		expand("{outname}/rare-variants/rare-variants-pseudo-haplotypes.vcf", outname = config["outname"])
+		expand("{outname}/panel/panel-multiallelic.vcf", outname = config["outname"]),
+		expand("{outname}/panel/panel-biallelic.vcf", outname = config["outname"])
 #		expand("results/statistics_{mode}.txt", mode = modes)
