@@ -3,7 +3,7 @@
 import sys
 import argparse
 import re
-import pyfaidx
+import gzip
 from collections import defaultdict
 
 
@@ -22,12 +22,14 @@ class VcfRecord:
 		self._qual = fields[5]
 		self._filter = fields[6]
 		self._info = fields[7]
-		self._format = fields[8]
+		self._format = "GT"
+		# determine index of the GT field
+		gt_index = fields[8].split(':').index('GT')
 		if len(sample_names) != len(fields[9:]):
 			raise RuntimeError("VcfRecord: number of sample names does not match the number of sample columns in the VCF line.")
 		self._sample_to_field = {}
 		for name, data in zip(sample_names, fields[9:]):
-			self._sample_to_field[name] = data
+			self._sample_to_field[name] = data.split(':')[gt_index]
 
 
 	def __eq__(self, other):
@@ -53,11 +55,16 @@ class VcfRecord:
 			return False
 		return True
 
+
 	def __lt__(self, other):
 		if self._chrom != other._chrom:
 			return self._chrom < other._chrom
-		else:
+		if self._pos != other._pos:
 			return self._pos < other._pos
+		if self._ref != other._ref:
+			return self._ref < other._ref
+		return sorted(self._alt)[0] < sorted(self._ref)[0]
+
 
 	def chrom(self):
 		return self._chrom
@@ -89,12 +96,31 @@ class VcfRecord:
 
 		if self._ref != other._ref:
 			return False
+		return True
+
+
+	def same_variant(self, other):
+		"""
+		Return true, if the variant is representing the same
+		event as variant "other". This is the case if the
+		position, ref allele and alt alleles are identical.
+		"""
+
+		if self._chrom != other._chrom:
+			return False
+		
+		if self._pos != other._pos:
+			return False
+
+		if self._ref != other._ref:
+			return False
 		
 		alt_alleles = set(self._alt)
 		other_alt_alleles = set(other._alt)
 		if alt_alleles != other_alt_alleles:
 			return False
 		return True
+
 
 	def combine_variants(self, other):
 		"""
@@ -118,10 +144,9 @@ class VcfRecord:
 				self._alt.append(b)
 				new_indices[i+1] = len(self._alt)
 		# add sample columns and update genotypes
-		# index of GT field within samples
-		gt_index = other._format.split(':').index('GT')
+		self._format = "GT"
 		for name, data in other._sample_to_field.items():
-			genotype = data.split(':')[gt_index]
+			genotype = data
 			updated_genotype = []
 			separator = '|' if '|' in genotype else '/'
 
@@ -130,9 +155,8 @@ class VcfRecord:
 					updated_genotype.append(str(new_indices[int(a)]))
 				else:
 					updated_genotype.append(a)
-			updated_sample_field = data.split(':')
-			updated_sample_field[gt_index] = separator.join(updated_genotype)
-			self._sample_to_field[name] = ':'.join(updated_sample_field)
+			self._sample_to_field[name] = separator.join(updated_genotype)
+
 
 
 	def str_record(self, sample_names = [], is_phased = False):
@@ -152,17 +176,14 @@ def find_overlaps(variants):
 	REF allele. These are the ones that
 	are to be combined into one record later.
 	"""
-	assert len(variants) > 1
-	current_position = variants[0].pos()
-	current_chrom = variants[0].chrom()
+	assert len(variants) > 1	
 	current_cluster = [variants[0]]
 	for v in variants[1:]:
-		if (v.pos() != current_position) or (v.chrom() != current_chrom) or (v.ref() != current.ref()):
+		if not v.same_variant(current_cluster[-1]):
 			yield current_cluster
-			current_cluster = []
-		current_chrom = v.chrom()
-		current_cluster.append(v)
-		current_pos = v.pos()
+			current_cluster = [v]
+		else:	
+			current_cluster.append(v)
 	if len(current_cluster) != 0:
 		yield current_cluster
 
@@ -173,33 +194,50 @@ def create_combined_cluster(cluster):
 	REF alleles, combined them into one single
 	record.
 	"""
+	assert len(cluster) > 0
+	if len(cluster) == 1:
+		return cluster[0]
 	assert len(cluster) > 1
 	combined_record = cluster[0]
 	for c in cluster[1:]:
 		combined_record.combine_variants(c)
-	return c
+	return combined_record
 
 
 def run_combine_vcfs(vcfs):
 	vcf_to_samples = {}
 	variants = []
+	all_samples = set([])
 	for vcf in vcfs:
-		for line in open(vcf, 'r'):
+		for line in gzip.open(vcf, 'rt'):
 			if line.startswith('##'):
+				print(line.strip())
 				continue
 			if line.startswith('#'):
 				# extract list of variants
 				samples = line.strip().split('\t')[9:]
 				vcf_to_samples[vcf] = samples
+				all_samples.update(samples)
 				continue
 			assert vcf in vcf_to_samples
+			
+			# make sure that the VCF is biallelic
+			fields = line.split()
+			alt_alleles = fields[4].split(',')
+			if len(alt_alleles) > 1:
+				raise RuntimeError("Only biallelic VCFs can be handled. Convert multi-allelic VCFs into a biallelic representation first (e.g. using bcftools).")
 			variant = VcfRecord(line, vcf_to_samples[vcf])
 			variants.append(variant)
 	variants.sort()
-	print(variants)
+	# print header line
+	all_samples = sorted(list(all_samples))
+	print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t" + "\t".join(all_samples))
 	for cluster in find_overlaps(variants):
-		combined_record = create_combined_record(cluster)
+		combined_record = create_combined_cluster(cluster)
+		print(combined_record.str_record(all_samples, True))
 		
+	
+
 			
 # TODOs:
 # write header of VCF properly
@@ -207,8 +245,8 @@ def run_combine_vcfs(vcfs):
 # when and when not to combine variants??
 # Plan: 
 #	restrict script to biallelic VCFs only --> first check if my merging script is compartible with that
-#	require identical alleles for variants to be the same
-#	sorting also according to alleles, so that identical records are always ascending
+#	require identical alleles for variants to be the same (DONE)
+#	sorting also according to alleles, so that identical records are always ascending (DONE)
 	 
 		
 	

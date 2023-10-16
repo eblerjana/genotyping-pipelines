@@ -28,8 +28,7 @@ for line in sys.stdin:
 		else:
 			current_gt = gt_fields[current_index]
 		current_index += 1
-	if not "|" in current_gt:
+	if not("|" in current_gt) and (samples % 2 != 0):
 		current_gt += "|" + current_gt
-		genotypes.append(current_gt)
-	
+		genotypes.append(current_gt)	
 	print("\t".join(fields[:9] + genotypes))

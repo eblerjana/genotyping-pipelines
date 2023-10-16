@@ -3,7 +3,7 @@ import tempfile
 import io
 import gzip
 from contextlib import redirect_stdout
-from combine_vcfs import VcfRecord
+from combine_vcfs import VcfRecord, find_overlaps, create_combined_cluster
 
 
 class Test_VcfRecord(unittest.TestCase):
@@ -19,7 +19,7 @@ class Test_VcfRecord(unittest.TestCase):
 
 	def test_same_variant(self):
 		vcf_line1 = "chr1\t1110696\trs6040355\tA\tG,T\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT:GQ:DP:HQ\t1|2:21:6:23,27\t2|1:2:0:18,2\t2/2:35:4"
-		vcf_line2 = "chr1\t1110696\trs6040355\tA\tC\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT:GQ:DP:HQ\t1|2:21:6:23,27\t2|1:2:0:18,2\t2/2:35:4"
+		vcf_line2 = "chr1\t1110696\trs6040355\tA\tT,G\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT:GQ:DP:HQ\t1|2:21:6:23,27\t2|1:2:0:18,2\t2/2:35:4"
 		
 		record1 = VcfRecord(vcf_line1, ["sample1", "sample2", "sample3"])
 		record2 = VcfRecord(vcf_line2, ["sample4", "sample5", "sample6"])
@@ -40,8 +40,8 @@ class Test_VcfRecord(unittest.TestCase):
 	
 	def test_combine_variants1(self):
 		vcf_line1 = "chr1\t1110696\trs6040355\tA\tG,T\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT:GQ:DP:HQ\t1|2:21:6:23,27\t2|1:2:0:18,2\t2/2:35:4"
-		vcf_line2 = "chr1\t1110696\trs6040355\tA\tT\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT:GQ:DP:HQ\t0|1:21:6:23,27\t1|1:2:0:18,2\t0/1:35:4"
-		expected = "chr1\t1110696\trs6040355\tA\tG,T\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT:GQ:DP:HQ\t1|2:21:6:23,27\t2|1:2:0:18,2\t2/2:35:4\t0|2:21:6:23,27\t2|2:2:0:18,2\t0/2:35:4"
+		vcf_line2 = "chr1\t1110696\trs6040355\tA\tT,G\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT:GQ:DP:HQ\t0|1:21:6:23,27\t1|1:2:0:18,2\t0/1:35:4"
+		expected = "chr1\t1110696\trs6040355\tA\tG,T\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT\t1|2\t2|1\t2/2\t0|2\t2|2\t0/2"
 		
 		record1 = VcfRecord(vcf_line1, ["sample1", "sample2", "sample3"])
 		record2 = VcfRecord(vcf_line2, ["sample4", "sample5", "sample6"])
@@ -68,19 +68,19 @@ class Test_VcfRecord(unittest.TestCase):
 		record2 = VcfRecord(vcf_line2, ["sample4", "sample5", "sample6"])
 
 		record1.combine_variants(record2)
-		expected = "chr1\t1110696\trs6040355\tA\tG,T\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT:GQ:DP:HQ\t1|2:21:6:23,27\t2|1:2:0:18,2\t2/2:35:4\t0|2:21:6:23,27\t2|1:2:0:18,2\t0/1:35:4"
+		expected = "chr1\t1110696\trs6040355\tA\tG,T\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT\t1|2\t2|1\t2/2\t0|2\t2|1\t0/1"
 		expected_record = VcfRecord(expected, ["sample1", "sample2", "sample3", "sample4", "sample5", "sample6"])
 
 		self.assertTrue(expected_record == record1)
 
 	def test_combine_variants4(self):
 		vcf_line1 = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|2\t2|1\t2/2"
-		vcf_line2 = "chr1\t1110696\trs6040355\tATTG\tT,GA,CTG\t67\tPASS\t.\tGT:GQ:DP:HQ\t0|1\t1|2\t0/3"
+		vcf_line2 = "chr1\t1110696\trs6040355\tATTG\tT,GA\t67\tPASS\t.\tGT:GQ:DP:HQ\t0|1\t1|2\t0/2"
 		record1 = VcfRecord(vcf_line1, ["sample1", "sample2", "sample3"])
 		record2 = VcfRecord(vcf_line2, ["sample4", "sample5", "sample6"])
 
 		record1.combine_variants(record2)
-		expected = "chr1\t1110696\trs6040355\tATTG\tGA,T,CTG\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|2\t2|1\t2/2\t0|2\t2|1\t0/3"
+		expected = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT\t1|2\t2|1\t2/2\t0|2\t2|1\t0/1"
 		expected_record = VcfRecord(expected, ["sample1", "sample2", "sample3", "sample4", "sample5", "sample6"])
 
 		self.assertTrue(expected_record == record1)
@@ -88,12 +88,12 @@ class Test_VcfRecord(unittest.TestCase):
 
 	def test_combine_variants5(self):
 		vcf_line1 = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|2\t2|1\t2/2"
-		vcf_line2 = "chr1\t1110696\trs6040355\tATTG\tCTG\t67\tPASS\t.\tGT:GQ:DP:HQ\t0|1\t1|0\t0/0"
+		vcf_line2 = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT:GQ:DP:HQ\t0|1\t1|0\t0/0"
 		record1 = VcfRecord(vcf_line1, ["sample1", "sample2", "sample3"])
 		record2 = VcfRecord(vcf_line2, ["sample4", "sample5", "sample6"])
 
 		record1.combine_variants(record2)
-		expected = "chr1\t1110696\trs6040355\tATTG\tGA,T,CTG\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|2\t2|1\t2/2\t0|3\t3|0\t0/0"
+		expected = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT\t1|2\t2|1\t2/2\t0|1\t1|0\t0/0"
 		expected_record = VcfRecord(expected,  ["sample1", "sample2", "sample3", "sample4", "sample5", "sample6"])
 		self.assertTrue(expected_record == record1)
 
@@ -102,11 +102,11 @@ class Test_VcfRecord(unittest.TestCase):
 		vcf_line1 = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|2\t2|1\t2/2"
 		record1 = VcfRecord(vcf_line1, ["sample1", "sample2", "sample3"])
 		str_rec = record1.str_record()
-		expected = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|2\t2|1\t2/2"
+		expected = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT\t1|2\t2|1\t2/2"
 		self.assertTrue(str_rec == expected)
 
 		str_rec = record1.str_record(sample_names = ["sample4", "sample5"])
-		expected = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|2\t2|1\t2/2\t0/0\t0/0"
+		expected = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT\t1|2\t2|1\t2/2\t0/0\t0/0"
 		self.assertTrue(str_rec == expected)
 		
 	def test_combine_variants7(self):
@@ -119,23 +119,51 @@ class Test_VcfRecord(unittest.TestCase):
 		self.assertRaises(RuntimeError, record1.combine_variants, record2)
 
 
-# TODO
-def Test_find_overlaps(unittest.TestCase):
+class Test_find_overlaps(unittest.TestCase):
 	def test_find_overlaps1(self):
 		vcf_line1 = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT\t1|2\t2|1\t2/2"
 		vcf_line2 = "chr1\t1110696\trs6040355\tATTG\tCTG\t67\tPASS\t.\tGT\t0|1\t1|0\t0/0"
 		vcf_line3 = "chr1\t1110696\trs6040355\tATT\tCTG\t67\tPASS\t.\tGT\t0|1\t1|0\t0/0"
 		record1 = VcfRecord(vcf_line1, ["sample1", "sample2", "sample3"])
 		record2 = VcfRecord(vcf_line2, ["sample1", "sample2", "sample3"])
-		record3 = VcfRecord(vcf_line3, )
+		record3 = VcfRecord(vcf_line3, ["sample3", "sample4", "sample5"])
 		
-		pass
+		result = [r for r in find_overlaps([record1, record2, record3])]
+		# no overlaps, since all variants are considered different
+		self.assertTrue(len(result) == 3)
+		
+		result = [r for r in find_overlaps([record1, record1, record2])]
+		self.assertTrue(len(result) == 2)
+		self.assertTrue(result[0] == [record1, record1])
+		self.assertTrue(result[1] == [record2])
 
 
-# TODO
-def Test_create_combined_clusters(unittest.TestCase):
+class Test_create_combined_clusters(unittest.TestCase):
 	def test_create_combine(self):
-		pass
+		vcf_line1 = "chr1\t1110696\trs6040355\tATTG\tCTG\t67\tPASS\t.\tGT\t1|1\t1|1\t1/1"
+		vcf_line2 = "chr1\t1110696\trs6040355\tATTG\tCTG\t67\tPASS\t.\tGT\t0|1\t1|0\t0/0"
+		vcf_line3 = "chr1\t1110696\trs6040355\tATT\tCTG\t67\tPASS\t.\tGT\t0|1\t1|0\t0/0"
+		record1 = VcfRecord(vcf_line1, ["sample1", "sample2", "sample3"])
+		record2 = VcfRecord(vcf_line2, ["sample4", "sample5", "sample6"])
+		record3 = VcfRecord(vcf_line3, ["sample3", "sample4", "sample5"])
+
+		clusters = [c for c in find_overlaps([record1, record2, record3])]
+		result = []
+		for c in clusters:
+			result.append(create_combined_cluster(c))
+
+
+		self.assertTrue(len(result) == 2)
+		expected_line1 = "chr1\t1110696\trs6040355\tATTG\tCTG\t67\tPASS\t.\tGT\t1|1\t1|1\t1/1\t0|1\t1|0\t0/0"
+		expected_line2 = "chr1\t1110696\trs6040355\tATT\tCTG\t67\tPASS\t.\tGT\t0/0\t0/0\t0|1\t1|0\t0/0\t0/0"
+		computed_line1 = result[0].str_record(["sample1", "sample2", "sample3", "sample4", "sample5", "sample6"])
+		computed_line2 = result[1].str_record(["sample1", "sample2", "sample3", "sample4", "sample5", "sample6"])
+
+		self.assertTrue(expected_line1 == computed_line1)
+		self.assertTrue(expected_line2 == computed_line2)
+
+
+		
 
 
 if __name__ == '__main__':
