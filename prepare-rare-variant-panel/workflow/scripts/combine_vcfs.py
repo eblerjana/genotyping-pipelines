@@ -63,7 +63,7 @@ class VcfRecord:
 			return self._pos < other._pos
 		if self._ref != other._ref:
 			return self._ref < other._ref
-		return sorted(self._alt)[0] < sorted(self._ref)[0]
+		return sorted(self._alt)[0] < sorted(other._alt)[0]
 
 
 	def chrom(self):
@@ -235,21 +235,8 @@ def run_combine_vcfs(vcfs):
 	for cluster in find_overlaps(variants):
 		combined_record = create_combined_cluster(cluster)
 		print(combined_record.str_record(all_samples, True))
-		
-	
 
-			
-# TODOs:
-# write header of VCF properly
-# remove information other than the GT field (write header accordingly)
-# when and when not to combine variants??
-# Plan: 
-#	restrict script to biallelic VCFs only --> first check if my merging script is compartible with that
-#	require identical alleles for variants to be the same (DONE)
-#	sorting also according to alleles, so that identical records are always ascending (DONE)
-	 
-		
-	
+
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(prog='combine_vcfs.py', description=__doc__)

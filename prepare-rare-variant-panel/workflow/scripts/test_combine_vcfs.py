@@ -61,6 +61,7 @@ class Test_VcfRecord(unittest.TestCase):
 		record2 = VcfRecord(vcf_line2, ["sample4", "sample5", "sample6"])
 		self.assertRaises(RuntimeError, record1.combine_variants, record2)
 
+
 	def test_combine_variants3(self):
 		vcf_line1 = "chr1\t1110696\trs6040355\tA\tG,T\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT:GQ:DP:HQ\t1|2:21:6:23,27\t2|1:2:0:18,2\t2/2:35:4"
 		vcf_line2 = "chr1\t1110696\trs6040355\tA\tT,G\t67\tPASS\tNS=2;DP=10;AF=0.333,0.667;AA=T;DB\tGT:GQ:DP:HQ\t0|1:21:6:23,27\t1|2:2:0:18,2\t0/2:35:4"
@@ -72,6 +73,7 @@ class Test_VcfRecord(unittest.TestCase):
 		expected_record = VcfRecord(expected, ["sample1", "sample2", "sample3", "sample4", "sample5", "sample6"])
 
 		self.assertTrue(expected_record == record1)
+
 
 	def test_combine_variants4(self):
 		vcf_line1 = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|2\t2|1\t2/2"
@@ -119,6 +121,37 @@ class Test_VcfRecord(unittest.TestCase):
 		self.assertRaises(RuntimeError, record1.combine_variants, record2)
 
 
+	def test_vcfrrecord_sort1(self):
+		vcf_line1 = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|2\t2|1\t2/2"
+		vcf_line2 = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|0\t2|0\t1/2"
+		vcf_line3 = "chr1\t1110696\trs6040355\tATTG\tA\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|2\t2|1\t2/2"
+		
+		variants = [VcfRecord(vcf_line1, ["sample1", "sample2", "sample3"]), VcfRecord(vcf_line3, ["sample4", "sample5", "sample6"]), VcfRecord(vcf_line2, ["sample1", "sample2", "sample3"])]
+		sorted_variants = sorted(variants)
+
+		self.assertTrue(sorted_variants[0] == VcfRecord(vcf_line3, ["sample4", "sample5", "sample6"]))
+		self.assertTrue(sorted_variants[1] == VcfRecord(vcf_line1, ["sample1", "sample2", "sample3"]))
+		self.assertTrue(sorted_variants[2] == VcfRecord(vcf_line2, ["sample1", "sample2", "sample3"]))
+
+
+	def test_vcfrrecord_sort2(self):
+		vcf_line1 = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|2\t2|1\t2/2"
+		vcf_line2 = "chr1\t1110696\trs6040355\tATTG\tT,GA\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|0\t2|0\t1/2"
+
+		record1 = VcfRecord(vcf_line1, ["sample1", "sample2", "sample3"])
+		record2 = VcfRecord(vcf_line2, ["sample1", "sample2", "sample3"])
+
+		# both records are equal (in the sense that position + alleles are same)
+		self.assertFalse(record1 < record2)
+		self.assertFalse(record2 < record1)
+
+		# record3 should be larger because the ALT allele is lexicographically larger
+		vcf_line3 = "chr1\t1110696\trs6040355\tATTG\tT\t67\tPASS\t.\tGT:GQ:DP:HQ\t1|0\t2|0\t1/2"
+		record3 = VcfRecord(vcf_line3, ["sample1", "sample2", "sample3"])
+		self.assertTrue(record1 < record3)
+		self.assertTrue(record2 < record3)
+
+
 class Test_find_overlaps(unittest.TestCase):
 	def test_find_overlaps1(self):
 		vcf_line1 = "chr1\t1110696\trs6040355\tATTG\tGA,T\t67\tPASS\t.\tGT\t1|2\t2|1\t2/2"
@@ -161,9 +194,6 @@ class Test_create_combined_clusters(unittest.TestCase):
 
 		self.assertTrue(expected_line1 == computed_line1)
 		self.assertTrue(expected_line2 == computed_line2)
-
-
-		
 
 
 if __name__ == '__main__':
