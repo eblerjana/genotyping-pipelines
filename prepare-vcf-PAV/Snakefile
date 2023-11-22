@@ -1,0 +1,104 @@
+configfile:'config.yaml'
+
+## parameters
+vcf = config['vcf']
+reference = config['reference']
+scripts = 'scripts'
+# allow max 20 % missing alleles at a variant position
+frac_missing = 0.2
+outdir = config['outdir']
+
+rule all:
+	input:
+		expand('{outdir}/pangenome/pangenome.vcf', outdir=outdir),
+		expand('{outdir}/{format}_stats.txt', ourdir=ourdir, format=['callset', 'graph'])
+
+
+
+###########################################################
+##  Make some prior checks with input VCF 		   ##
+###########################################################
+
+
+# check that REF alleles match the alleles in the reference genome
+rule check_reference:
+	input:
+		vcf=vcf,
+		reference=reference
+	output:
+		result='{outdir}/statistics/norm-check-ref.log',
+		vcf=temp('{outdir}/norm-check-ref.vcf')
+	conda:
+		'env/merging.yml'
+	shell:
+		"""
+		bcftools norm --check-ref e {input.vcf} -f {input.reference} 2> {output.result} 1> {output.vcf}
+		"""
+
+
+###########################################################
+##  Convert VCF into pangenome graph by merging variants ##
+##  that are overlapping into multi-allelic positions.   ##
+###########################################################
+
+# check that VCF is correct and remove positions with more than frac_missing missing alleles
+rule prepare_vcf:
+	input:
+		vcf=vcf,
+		check='{outdir}/statistics/norm-check-ref.log'
+	output:
+		temp('{outdir}/input-vcf/input-missing-removed.vcf')
+	log:
+		'{outdir}/input-vcf/prepare-vcf.log'
+	benchmark:
+		'{outdir}/benchmarks/prepare-vcf.txt'
+	conda:
+		'env/merging.yml'
+	shell:
+		"zcat {input.vcf} | python3 {scripts}/prepare-vcf.py --missing {frac_missing} 2> {log} 1> {output}"
+
+
+
+# merge variants into a pangenome graph
+rule merge_haplotypes:
+	input:
+		vcf = '{outdir}/input-vcf/input-missing-removed.vcf',
+		reference = reference
+	output:
+		'{outdir}/pangenome/pangenome.vcf.gz'
+	log:
+		 '{outdir}/pangenome/pangenome.log'
+	benchmark:
+		'{outdir}/benchmarks/merge-haplotypes.txt'
+	conda:
+		"env/merging.yml"
+	resources:
+		mem_total_mb=900000,
+		runtime_hrs=30,
+		runtime_min=1
+	shell:
+		"""
+		python3 {scripts}/merge_vcfs.py merge -vcf {input.vcf} -r {input.reference} -ploidy 2  2> {log} | bgzip > {output}
+		tabix -p vcf {output}
+		"""
+
+
+###########################################################
+##  Compute some statistics on the VCFs.                 ##
+###########################################################
+
+rule vcf_stats:
+	input:
+		lambda wildcards: vcf if wildcards.format == 'callset' else '{outdir}/pangenome/pangenome.vcf.gz'
+	output:
+		'{outdir}/{format}_stats.txt'
+	params:
+		flag = '--sample-info ' + config['sample_info'] if config['sample_info'] != '' else ''
+	wildcard_constraints:
+		format = 'graph|callset'
+	shell:
+		"""
+		zcat {input} | python3 {scripts}/vcf-stats.py {params.flag} > {output}
+		"""
+		
+

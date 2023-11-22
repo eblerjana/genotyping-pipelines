@@ -1,0 +1,12 @@
+# input vcf with variants to be genotyped
+vcf: "variants_batch1_sv_insdel_alt.vcf.gz"
+
+# reference genome
+reference: ref.fa
+
+# name of the output directory
+outdir: results
+
+# optional: list specifying the gender of the samples
+# present in the VCF (used to generate statistics). Format: <sample-name>	<1|2>
+sample_info: "sample-info.tsv"
