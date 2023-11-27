@@ -74,6 +74,8 @@ rule genotyping:
 		genotyping_vcf = temp("results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_genotyping.vcf"),
 	log:
 		"results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}.log"
+	wildcard_constraints:
+		version = "|".join([k for k in config['pangenie'].keys()] + ['^' + k for k in config['pangenie-modules']])
 	threads: 24
 	resources:
 		mem_total_mb = lambda wildcards: 180000 if "v100" in wildcards.version else 100000,
@@ -91,6 +93,68 @@ rule genotyping:
 		module load Singularity
 		(/usr/bin/time -v {params.pangenie} -i {output.reads} -v {input.panel} -r /hilbert{input.reference} -o {params.out_prefix} -s {wildcards.sample} -j {threads} -t {threads} -g ) &> {log}
 		"""
+
+
+# genotype variants with pangenie in the modularized way - indexing step (to be done once)
+rule genotyping_index:
+	input:
+		reference=lambda wildcards: config['callsets'][wildcards.callset]['reference'],
+		panel = "results/population-typing/{callset}/panel.vcf"
+	output:
+		directory("results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/")
+	log:
+		"results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/pangenie-index.log"
+	wildcard_constraints:
+		version = "|".join([k for k in config['pangenie-modules'].keys()] + ['^' + k for k in config['pangenie']])
+	threads: 24
+	resources:
+		mem_total_mb = 80000,
+		runtime_hrs = 5,
+		runtime_min = 1
+	params:
+		out_prefix = "results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/index",
+		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version]
+	benchmark:
+		"results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/indexing_benchmark.txt"
+	priority: 1
+	shell:
+		"""
+		module load Singularity
+		(/usr/bin/time -v {params.pangenie}-index -v {input.panel} -r /hilbert{input.reference} -o {params.out_prefix} -t {threads} ) &> {log}
+		"""
+
+
+# genotype variants with pangenie in modularized way - genotyping step (to be done per sample)
+rule genotyping_genotype:
+	input:
+		directory("results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/"),
+		reads=lambda wildcards: samples[wildcards.sample][wildcards.coverage]
+	output:
+		genotyping_vcf = temp("results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_genotyping.vcf"),
+	log:
+		"results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}.log"
+	wildcard_constraints:
+		 version = "|".join([k for k in config['pangenie-modules'].keys()] + ['^' + k for k in config['pangenie']])
+	threads: 24
+	resources:
+		mem_total_mb = 50000,
+		runtime_hrs = 3,
+		runtime_min = 1
+	params:
+		out_prefix = "results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}",
+		in_prefix = "results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/index",
+		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version]
+	benchmark:
+		"results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_benchmark.txt"
+	priority: 1
+	shell:
+		"""
+		module load Singularity
+		(/usr/bin/time -v {params.pangenie} -f {params.in_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log}
+		"""
+
+
+
 
 
 # compress multiallelic file and create version without SNVs

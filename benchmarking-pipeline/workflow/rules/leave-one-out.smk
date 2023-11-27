@@ -14,7 +14,7 @@ for line in open(config['reads'], 'r'):
 allowed_variants = ['snp', 'indels', 'large-deletion', 'large-insertion', 'large-complex']
 callsets_leave_one_out = [s for s in config['callsets'].keys()]
 coverages_leave_one_out = ['full'] + [c for c in config['downsampling']]
-versions_leave_one_out = [v for v  in config['pangenie'].keys()]
+versions_leave_one_out = [v for v  in config['pangenie'].keys()] + [v for v in config['pangenie-modules'].keys()]
 
 
 ################################################################
@@ -44,7 +44,7 @@ rule prepare_panel:
 	input:
 		"results/leave-one-out/{callset}/preprocessed-vcfs/{sample}_{callset}_multi_no-missing.vcf.gz"
 	output:
-		"results/leave-one-out/{callset}/input-panel/panel-{sample}_{callset}.vcf"
+		temp("results/leave-one-out/{callset}/input-panel/panel-{sample}_{callset}.vcf")
 	conda:
 		"../envs/genotyping.yml"
 	priority: 1
@@ -62,7 +62,7 @@ rule prepare_truth:
 	input:
 		"results/leave-one-out/{callset}/preprocessed-vcfs/{sample}_{callset}_bi_no-missing.vcf.gz"
 	output:
-		"results/leave-one-out/{callset}/truth/truth-{sample}_{callset}.vcf"
+		temp("results/leave-one-out/{callset}/truth/truth-{sample}_{callset}.vcf")
 	conda:
 		"../envs/genotyping.yml"
 	priority: 1
@@ -101,9 +101,7 @@ rule pangenie:
 		fasta = lambda wildcards: config['callsets'][wildcards.callset]['reference'],
 		vcf="results/leave-one-out/{callset}/input-panel/panel-{sample}_{callset}.vcf"
 	output:
-		reads = temp("results/leave-one-out/{callset}/{version}/{sample}/{coverage}/reads.fa"),
-		path_segments = temp("results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}_path_segments.fasta"),
-		genotyping = temp("results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}_genotyping.vcf")
+		genotyping = temp("results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/pangenie-{sample}_genotyping.vcf")
 	log:
 		"results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}.log"
 	threads: 24
@@ -113,13 +111,44 @@ rule pangenie:
 		runtime_min=1
 	priority: 1
 	params:
-		out_prefix="results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}",
+		out_prefix="results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/pangenie-{sample}",
 		pangenie = lambda wildcards: config['pangenie'][wildcards.version]
+	wildcard_constraints:
+		version = "|".join([k for k in config['pangenie'].keys()] + ['^' + k for k in config['pangenie-modules']])
 	shell:
 		"""
-		gunzip -c {input.reads} > {output.reads}
 		module load Singularity
-		(/usr/bin/time -v {params.pangenie} -i {output.reads} -v {input.vcf} -r /hilbert{input.fasta} -o {params.out_prefix} -s {wildcards.sample} -j {threads} -t {threads} -g ) &> {log}
+		(/usr/bin/time -v {params.pangenie} -i <(zcat {input.reads}) -v {input.vcf} -r /hilbert{input.fasta} -o {params.out_prefix} -s {wildcards.sample} -j {threads} -t {threads} -g ) &> {log}
+		"""
+
+
+# run pangenie in the modularized way (> v2.1.1)
+rule pangenie_modules:
+	input:
+		reads = lambda wildcards: reads_leave_one_out[wildcards.sample] if wildcards.coverage == 'full' else "results/downsampling/{callset}/{coverage}/{sample}_{coverage}.fa.gz",
+		fasta = lambda wildcards: config['callsets'][wildcards.callset]['reference'],
+		vcf="results/leave-one-out/{callset}/input-panel/panel-{sample}_{callset}.vcf"
+	output:
+		genotyping = temp("results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/pangenie-{sample}_genotyping.vcf")
+	log:
+		index = "results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}_index.log",
+		genotype = "results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}.log"
+	threads: 24
+	resources:
+		mem_total_mb=190000,
+		runtime_hrs=5,
+		runtime_min=1
+	priority: 1
+	params:
+		out_prefix="results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/pangenie-{sample}",
+		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version]
+	wildcard_constraints:
+		version = "|".join([k for k in config['pangenie-modules'].keys()] + ['^' + k for k in config['pangenie']])
+	shell:
+		"""
+		module load Singularity
+		(/usr/bin/time -v {params.pangenie}-index -v {input.vcf} -r /hilbert{input.fasta} -o {params.out_prefix} -t {threads} ) &> {log.index}
+		(/usr/bin/time -v {params.pangenie} -f {params.out_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log.genotype}
 		"""
 
 
@@ -163,7 +192,7 @@ rule prepare_beds:
 # convert genotyped VCF to biallelic representation
 rule convert_genotypes_to_biallelic:
 	input:
-		vcf = "results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}_genotyping.vcf.gz",
+		vcf = "results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/pangenie-{sample}_genotyping.vcf.gz",
 		biallelic = lambda wildcards: config['callsets'][wildcards.callset]['bi']
 	output:
 		"results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}_genotyping-biallelic.vcf"
@@ -360,6 +389,24 @@ rule plotting_versions:
 		sources = lambda wildcards: ' '.join([wildcards.callset + '-' + v + '-' + wildcards.coverage + '_' + wildcards.regions for v in versions_leave_one_out])
 	shell:
 		"python3 workflow/scripts/plot-results.py -files {input} -outname {output} -sources {params.sources} -metric {wildcards.metric}"
+
+
+
+# plot results of different subsampling runs, comparing concordance and typed variants per sample
+rule plotting_versions_conc_vs_untyped:
+	input:
+		lambda wildcards: expand("results/leave-one-out/{{callset}}/{version}/plots/{{coverage}}/concordance_{{callset}}-{version}-{{coverage}}_{{regions}}_{vartype}.tsv", version=versions_leave_one_out, vartype=config['callsets'][wildcards.callset]['variants'])
+	output:
+		"results/leave-one-out/{callset}/plots/comparison-versions/concordance-vs-untyped/concordance-vs-untyped_{coverage}_{regions}.pdf"
+	wildcard_constraints:
+		regions="biallelic|multiallelic"
+	priority: 1
+	conda:
+		"../envs/genotyping.yml"
+	params:
+		sources = lambda wildcards: ' '.join([wildcards.callset + '-' + v + '-' + wildcards.coverage + '_' + wildcards.regions for v in versions_leave_one_out])
+	shell:
+		"python3 workflow/scripts/plot-results.py -files {input} -outname {output} -sources {params.sources} -metric concordance-vs-untyped"
 
 
 

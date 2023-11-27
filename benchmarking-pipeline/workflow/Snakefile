@@ -1,6 +1,6 @@
 configfile: 'config/config.yaml'
-include: 'rules/leave-one-out-NEW.smk'
-include: 'rules/population-typing-NEW.smk'
+include: 'rules/leave-one-out.smk'
+include: 'rules/population-typing.smk'
 include: 'rules/population-evaluation.smk'
 
 coverages = ['full'] + config['downsampling']
