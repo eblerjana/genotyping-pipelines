@@ -54,5 +54,5 @@ for line in sys.stdin:
 
 # print statistics
 sys.stderr.write('skipped ' + str(missing_records) + ' (' + str(missing_alleles) + ') records (alleles) for which fraction of missing alleles exceeds threshold.\n')
-sys.stderr.write('skipped ' + str(ns_records) + ' (' + str(ns_alleles) + ') records (alleles) for which alternative alleles contained Ns\n.')
+sys.stderr.write('skipped ' + str(ns_records) + ' (' + str(ns_alleles) + ') records (alleles) for which alternative alleles contained Ns.\n')
 sys.stderr.write('kept ' + str(written_records) + ' (' + str(written_alleles) + ') records (alleles) of ' + str(total_records) + ' (' + str(total_alleles) + ').\n')

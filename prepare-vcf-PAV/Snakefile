@@ -10,8 +10,9 @@ outdir = config['outdir']
 
 rule all:
 	input:
-		expand('{outdir}/pangenome/pangenome.vcf', outdir=outdir),
-		expand('{outdir}/{format}_stats.txt', ourdir=ourdir, format=['callset', 'graph'])
+		expand('{outdir}/statistics/norm-check-ref.log', outdir=outdir),
+		expand('{outdir}/pangenome/pangenome.vcf.gz', outdir=outdir),
+		expand('{outdir}/{format}_stats.txt', outdir=outdir, format=['callset', 'graph'])
 
 
 
@@ -30,6 +31,8 @@ rule check_reference:
 		vcf=temp('{outdir}/norm-check-ref.vcf')
 	conda:
 		'env/merging.yml'
+	resources:
+		mem_total_mb = 20000
 	shell:
 		"""
 		bcftools norm --check-ref e {input.vcf} -f {input.reference} 2> {output.result} 1> {output.vcf}
@@ -73,9 +76,9 @@ rule merge_haplotypes:
 	conda:
 		"env/merging.yml"
 	resources:
-		mem_total_mb=900000,
-		runtime_hrs=30,
-		runtime_min=1
+		mem_total_mb=10000,
+		runtime_hrs=8,
+		runtime_min=59
 	shell:
 		"""
 		python3 {scripts}/merge_vcfs.py merge -vcf {input.vcf} -r {input.reference} -ploidy 2  2> {log} | bgzip > {output}
