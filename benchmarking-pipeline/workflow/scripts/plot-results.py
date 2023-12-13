@@ -16,9 +16,9 @@ def plot_concordances_all(files, outname, sources):
 
 	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080', '#f7ce37', '#bc202c', '#251188']
 	type_to_file = {}
-	n_rows = 4
+	n_rows = 1
 	n_cols = 5
-	plt.figure(figsize=(19,20))
+	plt.figure(figsize=(30,5))
 	for source in sources:
 		for f in files:
 			if not ('_' + source + '_') in f:
@@ -82,9 +82,9 @@ def plot_untyped_all(files, outname, sources):
 
 	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080', '#f7ce37', '#bc202c', '#251188']
 	type_to_file = {}
-	n_rows = 4
+	n_rows = 1
 	n_cols = 5
-	plt.figure(figsize=(19,20))
+	plt.figure(figsize=(30,5))
 	for source in sources:
 		for f in files:
 			if not ('_' + source + '_') in f:
@@ -148,9 +148,9 @@ def plot_fscores_all(files, outname, sources):
 
 	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080', '#f7ce37', '#bc202c', '#251188']
 	type_to_file = {}
-	n_rows = 4
+	n_rows = 1
 	n_cols = 5
-	plt.figure(figsize=(19,20))
+	plt.figure(figsize=(30,5))
 	for source in sources:
 		for f in files:
 			if not ('_' + source + '_') in f:
@@ -212,7 +212,7 @@ def plot_concordance_vs_untyped(files, outname, sources):
 	colors = ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#808080', '#f7ce37', '#bc202c', '#251188']
 	type_to_file = {}
 	n_rows = 5 # one row per variant type
-	plt.figure(figsize=(19,20))
+	plt.figure(figsize=(80,30))
 	for source in sources:
 		for f in files:
 			if not ('_' + source + '_') in f:

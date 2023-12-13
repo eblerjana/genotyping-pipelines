@@ -42,7 +42,8 @@ rule remove_missing:
 
 rule prepare_panel:
 	input:
-		"results/leave-one-out/{callset}/preprocessed-vcfs/{sample}_{callset}_multi_no-missing.vcf.gz"
+#		"results/leave-one-out/{callset}/preprocessed-vcfs/{sample}_{callset}_multi_no-missing.vcf.gz"
+		lambda wildcards: config['callsets'][wildcards.callset]['multi']
 	output:
 		temp("results/leave-one-out/{callset}/input-panel/panel-{sample}_{callset}.vcf")
 	conda:
@@ -179,13 +180,15 @@ rule prepare_beds:
 		fai = lambda wildcards: config['callsets'][wildcards.callset]['reference'] + '.fai'
 	output:
 		bed = "results/leave-one-out/{callset}/biallelic-bubbles.bed",
-		tmp = temp("results/leave-one-out/{callset}/biallelic-bubbles.fai")
+		tmp = temp("results/leave-one-out/{callset}/biallelic-bubbles.fai"),
+		bed_tmp = temp("results/leave-one-out/{callset}/biallelic-bubbles.tmp")
 	conda:
 		"../envs/genotyping.yml"
 	shell:
 		"""
 		sort -k1,1d -k 2,2n -k 3,3n {input.fai} > {output.tmp}
-		bedtools complement -i {input.bed} -g {output.tmp} > {output.bed}
+		sort -k1,1d -k 2,2n -k 3,3n {input.bed} > {output.bed_tmp}
+		bedtools complement -i {output.bed_tmp} -g {output.tmp} > {output.bed}
 		"""
 
 
@@ -205,13 +208,14 @@ rule convert_genotypes_to_biallelic:
 		"zcat {input.vcf} | python3 workflow/scripts/convert-to-biallelic.py {input.biallelic} | awk '$1 ~ /^#/ {{print $0;next}} {{print $0 | \"sort -k1,1 -k2,2n \"}}' > {output}"
 
 
-# determine untypable ids
+# determine untypable ids based on unmerged callsets (i.e. independent of graph construction)
+# this does not account for IDs that possibly went missing during construction of the graph (i.e. the multi-allelic input VCF)
 rule untypable_ids:
 	input:
 		lambda wildcards: config['callsets'][wildcards.callset]['bi']
 	output:
 		lists = "results/leave-one-out/{callset}/untypable-ids/{sample}-untypable.tsv",
-		summary = "results/leave-one-out/{callset}/untypable-ids-{sample}.tsv"
+		summary = temp("results/leave-one-out/{callset}/untypable-ids-{sample}.tsv")
 	params:
 		out = "results/leave-one-out/{callset}/untypable-ids"
 	conda:
@@ -220,11 +224,31 @@ rule untypable_ids:
 		"zcat {input} | python3 workflow/scripts/untypable-ids-single.py {params.out} {wildcards.sample} > {output.summary}"
 
 
+# determine IDs untypable because they have been filtered out during graph construction.
+# Whenever a graph is constructed by merging callset into graph, some IDs might go missing (due to conflicts or ".").
+# This step catches such cases as well. Since graph VCF might contain uncovered IDs, some untypable IDs might not get caught,
+# that is why files are combined with other untypables (above).
+rule generally_untypable_ids:
+	input:
+		biallelic = lambda wildcards: config['callsets'][wildcards.callset]['bi'],
+		multiallelic = "results/leave-one-out/{callset}/input-panel/panel-{sample}_{callset}.vcf",
+		untypables = "results/leave-one-out/{callset}/untypable-ids-{sample}.tsv"
+	output:
+		"results/leave-one-out/{callset}/untypable-ids/{sample}-untypable-all.tsv"
+	resources:
+		mem_total_mb = 50000
+	log:
+		"results/leave-one-out/{callset}/untypable-ids/{sample}-untypable-all.log"
+	shell:
+		"python3 workflow/scripts/untypable-ids-general.py {input.biallelic} {input.multiallelic} 2> {log} | cat - {input.untypables} | sort | uniq > {output}" 
+
+
+
 # determine untypable IDs
 rule remove_untypable:
 	input:
 		vcf = "results/leave-one-out/{callset}/{path}{sample}{other}.vcf",
-		ids = "results/leave-one-out/{callset}/untypable-ids/{sample}-untypable.tsv"
+		ids = "results/leave-one-out/{callset}/untypable-ids/{sample}-untypable-all.tsv"
 	output:
 		vcf = "results/leave-one-out/{callset}/{path}{sample}{other}-typable-{vartype}.vcf.gz",
 		tbi = "results/leave-one-out/{callset}/{path}{sample}{other}-typable-{vartype}.vcf.gz.tbi"
@@ -302,7 +326,7 @@ rule collect_typed_variants:
 	input:
 		callset = "results/leave-one-out/{callset}/preprocessed-vcfs/{sample}_{callset}_bi_no-missing.vcf.gz",
 		regions= region_to_bed,
-		ids="results/leave-one-out/{callset}/untypable-ids/{sample}-untypable.tsv"
+		ids="results/leave-one-out/{callset}/untypable-ids/{sample}-untypable-all.tsv"
 	output:
 		"results/leave-one-out/{callset}/genotyped-ids/{sample}_{regions}_{vartype}.tsv"
 	conda:
