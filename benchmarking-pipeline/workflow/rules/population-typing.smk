@@ -256,9 +256,10 @@ rule merge_vcfs_by_region_bi:
 	log:
 		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_bi_all_{region}.log"
 	resources:
-#		mem_total_mb = 200000,
-		mem_total_mb = 1000000,
-		runtime_hrs = 7,
+		mem_total_mb = 100000,
+#		mem_total_mb = 1000000,
+#		runtime_hrs = 7,
+		runtime_hrs = 2,
 		runtime_min = 59
 	wildcard_constraints:
 		region = "chr[0-9A-Z]+:[0-9]+-[0-9]+"

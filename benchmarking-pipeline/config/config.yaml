@@ -2,6 +2,55 @@
 ### callsets to be used as input to PanGenie (multiple ones can be listed)
 
 callsets:
+ hgsvc3-hg38:
+   multi: "/gpfs/project/projects/medbioinf/users/ebler/hgsvc3/prepare-vcf-PAV/results-Nov23/pangenome/pangenome.vcf.gz"
+   bi: "/gpfs/project/projects/medbioinf/users/ebler/hgsvc3/data/pav-calls/pav_variants_batch1_alt.vcf.gz"
+   reference: "/gpfs/project/projects/medbioinf/users/ebler/hgsvc3/data/reference/hg38.no_alt.fa"
+   variants:
+     - snp 
+     - indels
+     - large-deletion
+     - large-insertion
+   repeat_regions: "resources/ucsc-simple-repeats.bed"
+   leave_one_out_samples:
+     - HG00171
+     - HG00268
+     - HG00358
+     - HG00732
+     - HG01114
+     - HG01352
+     - HG01457
+     - HG01505
+     - HG01573
+     - HG02018
+     - HG02059
+     - HG02106
+     - HG02282
+     - HG02554
+     - HG02587
+     - HG02666
+     - HG02769
+     - HG02953
+     - HG03248
+     - HG03452
+     - HG03520
+     - HG03683
+     - HG03807
+     - HG04036
+     - HG04217
+     - NA18989
+     - NA19036
+     - NA19129
+     - NA19317
+     - NA19331
+     - NA19347
+     - NA19384
+     - NA19434
+     - NA19836
+     - NA19983
+     - NA20355
+     - HG00733
+     - HG02818
  cactus-hg38:
    multi: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/vcf/cactus-100000/cactus_filtered_ids.vcf.gz"
    bi: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/vcf/cactus-100000/cactus_filtered_ids_biallelic.vcf.gz"
@@ -16,29 +65,10 @@ callsets:
    leave_one_out_samples:
      - HG00438
      - HG02717
-     - HG00733
      - NA20129
      - HG03453
-
-
-# callsetname:
-#   # PanGenie-ready, multi-allelic VCF file
-#   multi: ""
-#   # PanGenie-ready, bi-allelic VCF file
-#   bi: ""
-#   # reference genome in FASTA format
-#   reference: ""
-#   # variants contained in the callset. Options are: snp|indels|large-deletion|large-insertion|large-complex
-#   variants:
-#     - snp 
-#     - indels
-#     - large-deletion
-#     - large-insertion
-#   # repeat annotations in BED format (see resources/ folder for GRCh38 and CHM13-based annotations)
-#   repeat_regions: ""
-#   # samples to run a leave-one-out experiment on
-#   leave_one_out_samples: []
-
+     - HG00733
+     - HG02818 
 
 
 # read data. File required that specifies a sample name, path to FASTA/FASTQ data and superpopulation:
@@ -47,11 +77,12 @@ reads: "resources/genotyping-pilot-reads.tsv"
 
 
 # PanGenie command. Different versions can be run by listing several commandlines
-pangenie:
- pangenie.v211: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v211.sif PanGenie"
+pangenie: {}
+
 
 # PanGenie command to be used for not yet released version of PanGenie (leave empty for now)
-pangenie-modules: {}
+pangenie-modules:
+ pangenie: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-e981195.sif PanGenie"
 
 
 # Downsampling coverages for leave-one-out experiment. If reads shall not be downsampled, leave empty.

@@ -286,7 +286,7 @@ rule merge_table:
 	conda:
 		"../envs/plotting.yml"
 	resources:
-		mem_total_mb=50000,
+		mem_total_mb=80000,
 		runtime_hrs=5,
 		runtime_min=1
 	shell:
