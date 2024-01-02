@@ -108,7 +108,7 @@ rule pangenie:
 	threads: 24
 	resources:
 		mem_total_mb=190000,
-		runtime_hrs=5,
+		runtime_hrs=7,
 		runtime_min=1
 	priority: 1
 	params:
@@ -130,26 +130,28 @@ rule pangenie_modules:
 		fasta = lambda wildcards: config['callsets'][wildcards.callset]['reference'],
 		vcf="results/leave-one-out/{callset}/input-panel/panel-{sample}_{callset}.vcf"
 	output:
-		genotyping = temp("results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/pangenie-{sample}_genotyping.vcf")
+		genotyping = temp("results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/pangenie-{sample}_genotyping.vcf"),
+		index = temp("results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/")
 	log:
 		index = "results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}_index.log",
 		genotype = "results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}.log"
 	threads: 24
 	resources:
 		mem_total_mb=190000,
-		runtime_hrs=5,
+		runtime_hrs=7,
 		runtime_min=1
 	priority: 1
 	params:
 		out_prefix="results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/pangenie-{sample}",
-		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version]
+		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[0] + " PanGenie",
+		pangenie_params = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[-1]
 	wildcard_constraints:
 		version = "|".join([k for k in config['pangenie-modules'].keys()] + ['^' + k for k in config['pangenie']])
 	shell:
 		"""
 		module load Singularity
 		(/usr/bin/time -v {params.pangenie}-index -v {input.vcf} -r /hilbert{input.fasta} -o {params.out_prefix} -t {threads} ) &> {log.index}
-		(/usr/bin/time -v {params.pangenie} -f {params.out_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log.genotype}
+		(/usr/bin/time -v {params.pangenie} {params.pangenie_params} -f {params.out_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log.genotype}
 		"""
 
 
@@ -309,7 +311,7 @@ rule vcfeval:
 		outname = "results/leave-one-out/{callset}/{version}/{sample}/{coverage}/precision-recall-typable/{regions}_{vartype}",
 		which = "--all-records"
 	resources:
-		mem_total_mb = 20000,
+		mem_total_mb = 30000,
 		runtime_hrs = 1,
 		runtime_min = 40
 	shell:

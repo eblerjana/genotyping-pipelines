@@ -17,7 +17,7 @@ for callset in config['nr_samples'].keys():
 reference_to_ignore = "CHM13" if config['reference_version'] == "GRCh38" else "GRCh38"
 
 
-chromosomes = [config['reference_prefix'] + str(i) for i in range(1,23)] + ['chrX']
+# chromosomes = [config['reference_prefix'] + str(i) for i in range(1,23)] + ['chrX']
 vcfbub = config['vcfbub']
 
 # threshold on bubble size used for vcfbub
@@ -42,7 +42,6 @@ rule filter_bubbles:
 
 # remove sites that:
 # - are covered by missing alleles in more than min_an haplotypes
-# - are located outside of given chromosomes
 # - contain Ns in sequence
 rule filter_vcf:
 	input:
@@ -62,7 +61,7 @@ rule filter_vcf:
 		min_an_male = lambda wildcards: nr_samples[wildcards.caller][1],
 		min_an_female = lambda wildcards: nr_samples[wildcards.caller][2]
 	shell:
-		"bcftools view --samples ^{reference_to_ignore} --force-samples  {input} | bcftools view --min-ac 1 | python3 workflow/scripts/filter-vcf.py {min_an} {min_an_male} {min_an_female} --chromosomes {chromosomes} 2> {log} 1> {output}"
+		"bcftools view --samples ^{reference_to_ignore} --force-samples  {input} | bcftools view --min-ac 1 | python3 workflow/scripts/filter-vcf.py {params.min_an} {params.min_an_male} {params.min_an_female} 2> {log} 1> {output}"
 
 
 # remove alternative alleles that are not covered by any haplotype

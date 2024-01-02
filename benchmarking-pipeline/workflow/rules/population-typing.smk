@@ -113,7 +113,7 @@ rule genotyping_index:
 		runtime_min = 1
 	params:
 		out_prefix = "results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/index",
-		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version]
+		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[0] + "PanGenie"
 	benchmark:
 		"results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/indexing_benchmark.txt"
 	priority: 1
@@ -143,14 +143,15 @@ rule genotyping_genotype:
 	params:
 		out_prefix = "results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}",
 		in_prefix = "results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/index",
-		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version]
+		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[0] + " PanGenie",
+		pangenie_params = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[-1]
 	benchmark:
 		"results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_benchmark.txt"
 	priority: 1
 	shell:
 		"""
 		module load Singularity
-		(/usr/bin/time -v {params.pangenie} -f {params.in_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log}
+		(/usr/bin/time -v {params.pangenie} {params.pangenie_params} -f {params.in_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log}
 		"""
 
 
