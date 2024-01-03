@@ -31,7 +31,7 @@ if __name__ == "__main__":
 	df = df.assign(pangenie_mendelian_consistency=lambda d: d['pangenie_mendelian_consistent_trios'] / d['pangenie_considered_trios'])
 
 	# consider allele frequency computed across all genotyped samples
-	df = df.assign(ac0_fail = lambda df: df['pangenie-all_allele_freq'] == 0)
+	df = df.assign(ac0_fail = lambda df: ~(df['pangenie-all_allele_freq'] > 0))
 	df = df.assign(mendel_fail = lambda df: (df.pangenie_mendelian_consistency < 0.8) & (df['pangenie_considered_trios']>=5))
 	df = df.assign(gq_fail = lambda df: df['pangenie-all_GQ>=200'] < threshold)
 	df = df.assign(self_fail = lambda df: (df['pangenie_self-genotyping_correct [%]'] < 90.0) )
@@ -346,6 +346,6 @@ if __name__ == "__main__":
 	df = df.assign(is_large_deletion = lambda df: df.variant_id.isin(large_deletions))
 	df = df.assign(is_large_complex = lambda df: df.variant_id.isin(large_complex))
 
-	header = ["variant_id", "ac0_fail", "mendel_fail", "gq_fail", "nonref_fail", "score_SVR", "all_pass", "confidence_level", "is_snp", "is_small_insertion", "is_small_deletion", "is_small_complex", "is_midsize_insertion", "is_midsize_deletion", "is_midsize_complex", "is_large_insertion", "is_large_deletion", "is_large_complex"]
+	header = ["variant_id", "ac0_fail", "mendel_fail", "gq_fail", "nonref_fail", "self_fail", "score_SVR", "all_pass", "confidence_level", "is_snp", "is_small_insertion", "is_small_deletion", "is_small_complex", "is_midsize_insertion", "is_midsize_deletion", "is_midsize_complex", "is_large_insertion", "is_large_deletion", "is_large_complex"]
 	df.to_csv(outname + '_filters.tsv', columns=header, sep='\t', index=False, na_rep='nan')
 
