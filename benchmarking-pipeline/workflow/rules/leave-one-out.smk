@@ -131,18 +131,19 @@ rule pangenie_modules:
 		vcf="results/leave-one-out/{callset}/input-panel/panel-{sample}_{callset}.vcf"
 	output:
 		genotyping = temp("results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/pangenie-{sample}_genotyping.vcf"),
-		index = temp("results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/")
+		index = temp(directory("results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/index/"))
 	log:
 		index = "results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}_index.log",
 		genotype = "results/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}.log"
 	threads: 24
 	resources:
 		mem_total_mb=190000,
-		runtime_hrs=7,
+		runtime_hrs=15,
 		runtime_min=1
 	priority: 1
 	params:
 		out_prefix="results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/pangenie-{sample}",
+		index_prefix="results/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/index/pangenie-{sample}",
 		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[0] + " PanGenie",
 		pangenie_params = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[-1]
 	wildcard_constraints:
@@ -150,8 +151,9 @@ rule pangenie_modules:
 	shell:
 		"""
 		module load Singularity
-		(/usr/bin/time -v {params.pangenie}-index -v {input.vcf} -r /hilbert{input.fasta} -o {params.out_prefix} -t {threads} ) &> {log.index}
-		(/usr/bin/time -v {params.pangenie} {params.pangenie_params} -f {params.out_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log.genotype}
+		mkdir {output.index}
+		(/usr/bin/time -v {params.pangenie}-index -v {input.vcf} -r /hilbert{input.fasta} -o {params.index_prefix} -t {threads} ) &> {log.index}
+		(/usr/bin/time -v {params.pangenie} {params.pangenie_params} -f {params.index_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log.genotype}
 		"""
 
 
