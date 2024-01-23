@@ -3,14 +3,10 @@ import argparse
 
 parser = argparse.ArgumentParser(prog='hwe.py', description=__doc__)
 parser.add_argument('min_an', metavar='AN', help="minimum number of paths a variant must be covered.")
-parser.add_argument('min_an_male', metavar='AN_MALE', help="minimum number of paths a variant must be covered when males are homozygous.")
-parser.add_argument('min_an_female', metavar='AN_FEMALE', help="minimum number of paths a variant must be covered on chrY.")
 parser.add_argument('--chromosomes', metavar='CHROMOSOMES', nargs='+', default=[], help='Only select these chromosomes.')
 args = parser.parse_args()
 
-min_an = int(args.min_an)
-min_an_male = int(args.min_an_male)
-min_an_female = int(args.min_an_female)
+min_an = float(args.min_an)
 
 total_variants = 0
 total_alleles = 0
@@ -44,11 +40,7 @@ for line in sys.stdin:
 		samples = fields[9:]
 		continue
 	chromosome = fields[0].split('.')[-1]
-	an_threshold = min_an
-	if 'X' in chromosome:
-		an_threshold = min_an_male
-	elif 'Y' in chromosome:
-		an_threshold = min_an_female
+	an_threshold = min_an * 2 * len(samples)
 	select_chromosome = (chromosome in args.chromosomes) or (args.chromosomes == [])
 	total_variants += 1
 	info_fields = {a.split('=')[0] : a.split('=')[1].strip() for a in fields[7].split(';') if '=' in a}

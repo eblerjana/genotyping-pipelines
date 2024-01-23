@@ -26,11 +26,10 @@ vcf:
 gfa:
  <callsetname>: "/path/to/gfa.gfa"
 
-# number of samples present in graph/vcf, as well as the number of male samples
-nr_samples:
- cactus:
-  total: 45  # modify this number accordingly
-  males: 17  # modify this number accordingly
+# OPTIONAL: TSV file specifying sex (1=male, 2=female) of each sample: <sample-name> <sex>
+# If not available, specify as: sample_info: {}
+sample_info:
+ <callsetname>: "/path/to/sample-info.tsv"
 
 # prefix used in underlying reference genome, i.e. if chromosomes are
 # named chr1, chr2, ... , set to "chr", in case they are named 1,2, ... , set to ""

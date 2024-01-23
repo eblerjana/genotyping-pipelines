@@ -6,5 +6,5 @@ callers = [k for k in config['vcf'].keys()]
 
 rule all:
 	input:
-		expand("results/vcf/{caller}/{caller}_filtered_ids.vcf.gz", caller = callers),
-		expand("results/vcf/{caller}/{caller}_filtered_ids_biallelic.vcf.gz", caller = callers)
+		expand("{results}/vcf/{caller}/{caller}_filtered_ids.vcf.gz", results = config['results'], caller = callers),
+		expand("{results}/vcf/{caller}/{caller}_filtered_ids_biallelic.vcf.gz", results = config['results'], caller = callers)
