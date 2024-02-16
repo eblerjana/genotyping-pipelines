@@ -137,8 +137,8 @@ rule genotyping_genotype:
 		 version = "|".join([k for k in config['pangenie-modules'].keys()] + ['^' + k for k in config['pangenie']])
 	threads: 24
 	resources:
-		mem_total_mb = 50000,
-		runtime_hrs = 3,
+		mem_total_mb = 90000,
+		runtime_hrs = 5,
 		runtime_min = 1
 	params:
 		out_prefix = "results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}",

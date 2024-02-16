@@ -227,7 +227,7 @@ rule genotype_concordance_variants:
 	conda:
 		"../envs/genotyping.yml"
 	resources:
-		mem_total_mb=500000,
+		mem_total_mb=3000000,
 		runtime_hrs=40,
 		runtime_min=59
 	log:
@@ -262,7 +262,7 @@ rule annotate_variants:
 	conda:
 		"../envs/genotyping.yml"
 	resources:
-		mem_total_mb=70000,
+		mem_total_mb=200000,
 		runtime_hrs=1,
 		runtime_min=59
 	shell:
@@ -300,7 +300,7 @@ rule plot_statistics:
 		"results/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv"
 	params:
 		outprefix="results/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all",
-		threshold= 5 if len(cohort_samples) < 1000 else 50
+		threshold= 10 if len(cohort_samples) < 1000 else 50
 	log:
 		"results/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all.log"
 	conda:

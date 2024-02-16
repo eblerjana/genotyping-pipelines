@@ -17,7 +17,8 @@ rule all:
 
 		expand("results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.vcf.gz", callset = [c for c in config['callsets'].keys()], what = ['bi'], version = versions_to_run, coverage = coverages),
 		expand("results/population-typing/{callset}/sample-index.tsv", callset = [c for c in config['callsets'].keys()]),
-		expand("results/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv", callset = [c for c in config['callsets'].keys()], version = versions_to_run, coverage = ['full'])
+		expand("results/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv", callset = [c for c in config['callsets'].keys()], version = versions_to_run, coverage = ['full']),
+		expand("results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/filtered/all-samples_bi_all_lenient.vcf.gz", callset = [c for c in config['callsets'].keys()], version = versions_to_run, coverage = ['full'])
 
 rule leave_one_out:
 	input:
@@ -30,4 +31,5 @@ rule population_typing:
 	input:
 		expand("results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.vcf.gz", callset = [c for c in config['callsets'].keys()], what = ['bi'], version = versions_to_run, coverage = coverages),
 		expand("results/population-typing/{callset}/sample-index.tsv", callset = [c for c in config['callsets'].keys()]),
-		expand("results/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv", callset = [c for c in config['callsets'].keys()], version = versions_to_run, coverage = ['full'])
+		expand("results/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv", callset = [c for c in config['callsets'].keys()], version = versions_to_run, coverage = ['full']),
+		expand("results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/filtered/all-samples_bi_all_lenient.vcf.gz", callset = [c for c in config['callsets'].keys()], version = versions_to_run, coverage = ['full'])

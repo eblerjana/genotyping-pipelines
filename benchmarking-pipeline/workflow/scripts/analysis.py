@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
 	# consider allele frequency computed across all genotyped samples
 	df = df.assign(ac0_fail = lambda df: ~(df['pangenie-all_allele_freq'] > 0))
-	df = df.assign(mendel_fail = lambda df: (df.pangenie_mendelian_consistency < 0.8) & (df['pangenie_considered_trios']>=5))
+	df = df.assign(mendel_fail = lambda df: (df.pangenie_mendelian_consistency < 0.85) & (df['pangenie_considered_trios']>=5))
 	df = df.assign(gq_fail = lambda df: df['pangenie-all_GQ>=200'] < threshold)
 	df = df.assign(self_fail = lambda df: (df['pangenie_self-genotyping_correct [%]'] < 90.0) )
 	df = df.assign(nonref_fail = lambda df: ( (df['pangenie_self-genotyping_0/1_typed_0/1'] + df['pangenie_self-genotyping_1/1_typed_1/1'])==0) & ( (df['pangenie_self-genotyping_0/1_typed_0/0'] + df['pangenie_self-genotyping_0/1_typed_1/1'] + df['pangenie_self-genotyping_1/1_typed_0/0'] + df['pangenie_self-genotyping_1/1_typed_0/1']) != 0) )
