@@ -15,7 +15,7 @@ rule prepare_vcf:
 	log:
 		"results/{source}/vcfs/{source}_all.log"
 	conda:
-		"../envs/whatshap.yml"
+		"../envs/truvari.yml"
 	shell:
 		"""
 		bcftools query -l {input} > {output.samples}
@@ -51,7 +51,7 @@ rule extract_intersection_samples_collapse:
 		unmerged=temp("results/{source}/vcfs/tmp-{source}_intersection_full-unmerged.vcf.gz"),
 		merged="results/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz"
 	conda:
-		"../envs/whatshap.yml"
+		"../envs/truvari.yml"
 	resources:
 		mem_total_mb=80000,
 		runtime_hrs=23,
@@ -74,7 +74,7 @@ rule extract_intersection_samples:
 	output:
 		"results/{source}/vcfs/{source}_intersection_full_raw.vcf.gz"
 	conda:
-		"../envs/whatshap.yml"
+		"../envs/truvari.yml"
 	wildcard_constraints:
 		source="|".join(callsets)
 	resources:
@@ -94,6 +94,23 @@ rule extract_intersection_samples:
 ###################################################################################################################################################################################################
 
 
+rule annotate_calls:
+	input:
+		vcf="{filename}.vcf.gz",
+		regions = [v for k,v in config["regions"].items()]
+	output:
+		temp("{filename}_annotated.txt.gz")
+	conda:
+		"../envs/genotyping.yml"
+	resources:
+		mem_total_mb=80000
+	params:
+		names= [k for k,v in config["regions"].items()]
+	shell:
+		"bedtools annotate -i {input.vcf} -files {input.regions} | python3 workflow/scripts/annotate_repeats.py -vcf {input.vcf} -names {params.names} -format vcf | bgzip > {output}"
+
+
+
 rule plot_sv_counts_filtered:
 	input:
 		raw = lambda wildcards: expand("results/{source}/vcfs/{source}_intersection_full_raw.vcf.gz", source = [s for s in callsets if not config['callsets'][s]['collapse']]),
@@ -111,6 +128,27 @@ rule plot_sv_counts_filtered:
 		outname = "results/sv-count-comparison",
 	shell:
 		"python3 workflow/scripts/plot-sv-counts.py -vcfs {input.collapse} {input.raw} -names {params.names_collapsed} {params.names_raw} -o {params.outname} -pop {input.populations} &> {log}"
+
+
+
+rule plot_sv_counts_filtered_annotated:
+	input:
+		raw = lambda wildcards: expand("results/{source}/vcfs/{source}_intersection_full_raw_annotated.txt.gz", source = [s for s in callsets if not config['callsets'][s]['collapse']]),
+		collapse = lambda wildcards: expand("results/{source}/vcfs/{source}_intersection_full_collapsed_annotated.txt.gz", source = [s for s in callsets if config['callsets'][s]['collapse']]),
+		populations = config['populations']
+	output:
+		"results/sv-count-comparison_annotated.pdf"
+	log:
+		"results/sv-count-comparison_annotated.log"
+	conda:
+		"../envs/plotting.yml"
+	params:
+		names_raw = ' '.join([s for s in callsets if not config['callsets'][s]['collapse']]),
+		names_collapsed = ' '.join([s for s in callsets if config['callsets'][s]['collapse']]),
+		outname = "results/sv-count-comparison_annotated",
+		annotations =  [k for k,v in config["regions"].items()]
+	shell:
+		"python3 workflow/scripts/plot-sv-counts.py -vcfs {input.collapse} {input.raw} -names {params.names_collapsed} {params.names_raw} -o {params.outname} -pop {input.populations} --annotations {params.annotations} &> {log}"
 
 
 

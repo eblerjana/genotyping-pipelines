@@ -2,5 +2,5 @@ include: "rules/compute-sv-counts-collapse.smk"
 
 rule all:
 	input:
-		"results/sv-count-comparison.pdf",
+		expand("results/sv-count-comparison{regions}.pdf", regions = ["", "_annotated"] if config["regions"] else [""]),
 		"results/length-distribution.pdf"

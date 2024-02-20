@@ -46,7 +46,14 @@ def parse_vcf(filename, callsetname, outfile, length, sample_to_pop, annotations
 		info_field = { k.split('=')[0] : k.split('=')[1] for k in fields[7].split(';') if '=' in k }
 		assert 'AF' in info_field
 		allele_freq = float(info_field['AF'])
-		af_category = '<=5%' if allele_freq <= 0.05 else '>5%'
+
+		af_category = ""
+		if allele_freq < 0.01:
+			af_category = '<1%'
+		elif allele_freq <= 0.05:
+			af_category = '1-5%'
+		else:
+			af_category = '>5%'
 
 		# count SVs present in each sample
 		gt_index = fields[8].split(':').index('GT')
@@ -79,7 +86,7 @@ def parse_vcf(filename, callsetname, outfile, length, sample_to_pop, annotations
 		pop = sample_to_pop[sample]
 		is_afr = 'AFR' if pop == 'AFR' else 'non-AFR'
 		for annotation in ['all', 'none'] + annotations:
-			for allele_freq in ['all', '<=5%', '>5%']:
+			for allele_freq in ['all', '<1%', '1-5%', '>5%']:
 				var_count = (counts[(sample, allele_freq, annotation)] / 2.0) if hap else counts[(sample, allele_freq, annotation)]
 				outfile.write('\t'.join([sample, callsetname, str(var_count), allele_freq, annotation, sample_to_pop[sample], is_afr, callsetname + '-' + is_afr]) + '\n')
 
@@ -104,7 +111,7 @@ def run_plotting(vcfs, names, outname, length, populations, annotations, only_re
 		# (1) plot number of SVs for different allele frequency cutoffs in all regions
 
 		df_plot = df[df['region'] == 'all']
-		fig, ax = plt.subplots(figsize=(8,5))
+		fig, ax = plt.subplots(figsize=(15,5))
 		# Hide the right and top spines
 		ax.spines['right'].set_visible(False)
 		ax.spines['top'].set_visible(False)
@@ -117,7 +124,7 @@ def run_plotting(vcfs, names, outname, length, populations, annotations, only_re
 
 		# (2) create same plot but split by AFR vs. non-AFR also
 
-		fig, ax = plt.subplots(figsize=(10,5))
+		fig, ax = plt.subplots(figsize=(15,5))
 		# Hide the right and top spines
 		ax.spines['right'].set_visible(False)
 		ax.spines['top'].set_visible(False)
@@ -128,7 +135,20 @@ def run_plotting(vcfs, names, outname, length, populations, annotations, only_re
 		plt.close()
 
 
-		# (3) plot number of SVs in different regions (all allele frequencies)
+		# (3) same plot as before, but only <1% allele frequency
+		df_plot_rare = df_plot[df_plot['allele frequency'] == '<1%']
+		fig, ax = plt.subplots(figsize=(15,5))
+		# Hide the right and top spines
+		ax.spines['right'].set_visible(False)
+		ax.spines['top'].set_visible(False)
+
+		# grouped violinplot
+		sns.violinplot(ax=ax, data=df_plot_rare, x='allele frequency', y=y_name, hue='callset-population', cut=0)
+		pdf.savefig()
+		plt.close()
+
+
+		# (4) plot number of SVs in different regions (all allele frequencies)
 
 		df_plot = df[df['allele frequency'] == 'all']
 		if only_regions:
@@ -147,7 +167,7 @@ def run_plotting(vcfs, names, outname, length, populations, annotations, only_re
 		plt.close()
 
 
-		# (4) plot number of SVs in different regions for common variants (AF>5%)
+		# (5) plot number of SVs in different regions for common variants (AF>5%)
 
 		df_plot = df[df['allele frequency'] == '>5%']
 		if only_regions:
@@ -165,8 +185,29 @@ def run_plotting(vcfs, names, outname, length, populations, annotations, only_re
 		pdf.savefig()
 		plt.close()
 
-	
-		# (5) for each callset, create scatterplot showing AFR/non-AFR samples
+
+
+		# (6) plot number of SVs in different regions for rare variants (AF<1%)
+
+		df_plot = df[df['allele frequency'] == '<1%']
+		if only_regions:
+			df_plot = df_plot[df_plot['region'] != 'all']
+		else:
+			df_plot = df_plot[df_plot['region'] != 'none']
+		fig, ax = plt.subplots(figsize=(15,5))
+		# Hide the right and top spines
+		ax.spines['right'].set_visible(False)
+		ax.spines['top'].set_visible(False)
+
+		# grouped violinplot
+		fig.suptitle('rare variants (AF < 1%)')
+		sns.violinplot(ax=ax, data=df_plot, x='region', y=y_name, hue='callset', cut=0)
+		pdf.savefig()
+		plt.close()
+
+
+
+		# (7) for each callset, create scatterplot showing AFR/non-AFR samples
 
 		for callsetname in names:
 			plt.figure()
@@ -181,7 +222,7 @@ def run_plotting(vcfs, names, outname, length, populations, annotations, only_re
 			plt.close()
 
 
-		# (6) create scatterplot comparing the number of SVs per sample across pairs of callsets
+		# (8) create scatterplot comparing the number of SVs per sample across pairs of callsets
 
 		pop_to_color = {
 			'AFR' : '#DB7D27',
@@ -191,51 +232,6 @@ def run_plotting(vcfs, names, outname, length, populations, annotations, only_re
 			'SAS' : '#782B8A'
 		}
 		
-		hprc_samples = [ 	"HG00438",
-					"HG00621",
-					"HG00673",
-					"HG00733",
-					"HG00735",
-					"HG00741",
-					"HG01071",
-					"HG01106",
-					"HG01109",
-					"HG01123",
-					"HG01175",
-					"HG01243",
-					"HG01258",
-					"HG01358",
-					"HG01361",
- 					"HG01891",
-					"HG01928",
- 					"HG01952",
-					"HG01978",
-					"HG02055",
- 					"HG02080",
-					"HG02109",
- 					"HG02145",
-					"HG02148",
- 					"HG02257",
-					"HG02486",
-					"HG02559",
-					"HG02572",
-					"HG02622",
-					"HG02630",
-					"HG02717",
-					"HG02723",
- 					"HG02818",
-					"HG02886",
-					"HG03098",
-					"HG03453",
-					"HG03486",
-					"HG03492",
-					"HG03516",
-					"HG03540",
-					"HG03579",
-					"NA18906",
-					"NA20129",
- 					"NA21309"]
-
 		# store (callset, sample) -> [SV count, population]
 		callset_to_values = defaultdict(lambda: [None, None])
 		# store callset -> [sample names]
@@ -251,7 +247,6 @@ def run_plotting(vcfs, names, outname, length, populations, annotations, only_re
 
 		for callset1 in callset_names:
 			for callset2 in callset_names:
-				annotation = []
 				if callset1 == callset2:
 					continue
 
@@ -267,8 +262,6 @@ def run_plotting(vcfs, names, outname, length, populations, annotations, only_re
 					counts_c2.append(callset_to_values[(callset2, sample)][0])
 					pop_c1 = callset_to_values[(callset1, sample)][1]
 					pop_c2 = callset_to_values[(callset2, sample)][1]
-					if sample in hprc_samples:
-						annotation.append((callset_to_values[(callset1, sample)][0], callset_to_values[(callset2, sample)][0], sample, pop_c1))
 					assert pop_c1 == pop_c2 
 					colors.append(pop_to_color[pop_c1])
 				
@@ -291,10 +284,6 @@ def run_plotting(vcfs, names, outname, length, populations, annotations, only_re
 						Line2D([0], [0], color=pop_to_color['EAS'], lw=4),
 						Line2D([0], [0], color=pop_to_color['SAS'], lw=4)]
 				ax.legend(custom_lines, ['AFR', 'AMR', 'EUR', 'EAS', 'SAS'])
-				# annotate HPRC samples by black circles
-				for point in annotation:
-					color = pop_to_color[point[3]]
-					ax.scatter([point[0]], [point[1]], facecolors=color, edgecolors='black')
 				pdf.savefig()
 				plt.close()
 
