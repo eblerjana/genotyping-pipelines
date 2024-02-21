@@ -11,7 +11,7 @@ for line in open(READS, 'r'):
 	samples[sample]['full'] = reads
 
 	for coverage in DOWNSAMPLING:
-		samples[sample][coverage] = RESULTS + "/downsampling/" + coverage + "/" + sample + "_{coverage}.fa.gz"
+		samples[sample][coverage] = "{results}/downsampling/" + coverage + "/" + sample + "_" + coverage + ".fa.gz"
 
 
 regions = defaultdict(list)
