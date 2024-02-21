@@ -6,7 +6,6 @@ READS = config['reads']
 PANGENIE = config['pangenie']
 PANGENIE_MODULES = config['pangenie-modules']
 DOWNSAMPLING = config['downsampling']
-RESULTS = config['results']
 
 
 include: 'rules/leave-one-out.smk'
