@@ -92,20 +92,20 @@ rule extract_intersection_samples:
 ###################################################################################################################################################################################################
 
 
-rule annotate_calls:
-	input:
-		vcf="{filename}.vcf.gz",
-		regions = [v for k,v in REGIONS.items()]
-	output:
-		temp("{filename}_annotated.txt.gz")
-	conda:
-		"../envs/genotyping.yml"
-	resources:
-		mem_total_mb=80000
-	params:
-		names= [k for k,v in REGIONS.items()]
-	shell:
-		"bedtools annotate -i {input.vcf} -files {input.regions} | python3 workflow/scripts/annotate_repeats.py -vcf {input.vcf} -names {params.names} -format vcf | bgzip > {output}"
+#rule annotate_calls:
+#	input:
+#		vcf="{filename}.vcf.gz",
+#		regions = [v for k,v in REGIONS.items()]
+#	output:
+#		temp("{filename}_annotated.txt.gz")
+#	conda:
+#		"../envs/genotyping.yml"
+#	resources:
+#		mem_total_mb=80000
+#	params:
+#		names= [k for k,v in REGIONS.items()]
+#	shell:
+#		"bedtools annotate -i {input.vcf} -files {input.regions} | python3 workflow/scripts/annotate_repeats.py -vcf {input.vcf} -names {params.names} -format vcf | bgzip > {output}"
 
 
 
@@ -129,24 +129,24 @@ rule plot_sv_counts_filtered:
 
 
 
-rule plot_sv_counts_filtered_annotated:
-	input:
-		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw_annotated.txt.gz", source = [s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
-		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed_annotated.txt.gz", source = [s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
-		populations = POPULATIONS
-	output:
-		"{results}/sv-count-comparison_annotated.pdf"
-	log:
-		"{results}/sv-count-comparison_annotated.log"
-	conda:
-		"../envs/plotting.yml"
-	params:
-		names_raw = ' '.join([s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
-		names_collapsed = ' '.join([s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
-		outname = "{results}/sv-count-comparison_annotated",
-		annotations =  [k for k,v in REGIONS.items()]
-	shell:
-		"python3 workflow/scripts/plot-sv-counts.py -vcfs {input.collapse} {input.raw} -names {params.names_collapsed} {params.names_raw} -o {params.outname} -pop {input.populations} --annotations {params.annotations} &> {log}"
+#rule plot_sv_counts_filtered_annotated:
+#	input:
+#		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw_annotated.txt.gz", source = [s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
+#		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed_annotated.txt.gz", source = [s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
+#		populations = POPULATIONS
+#	output:
+#		"{results}/sv-count-comparison_annotated.pdf"
+#	log:
+#		"{results}/sv-count-comparison_annotated.log"
+#	conda:
+#		"../envs/plotting.yml"
+#	params:
+#		names_raw = ' '.join([s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
+#		names_collapsed = ' '.join([s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
+#		outname = "{results}/sv-count-comparison_annotated",
+#		annotations =  [k for k,v in REGIONS.items()]
+#	shell:
+#		"python3 workflow/scripts/plot-sv-counts.py -vcfs {input.collapse} {input.raw} -names {params.names_collapsed} {params.names_raw} -o {params.outname} -pop {input.populations} --annotations {params.annotations} &> {log}"
 
 
 

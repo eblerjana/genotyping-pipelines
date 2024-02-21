@@ -2,12 +2,11 @@ configfile: "config/config.yaml"
 
 GENOTYPED_SETS = config['callsets']
 POPULATIONS = config['populations']
-REGIONS = config['regions']
 
 
 include: "rules/compute-sv-counts-collapse.smk"
 
 rule all:
 	input:
-		expand("{results}/sv-count-comparison{regions}.pdf", results = config["results"], regions = ["", "_annotated"] if config["regions"] else [""]),
+		expand("{results}/sv-count-comparison.pdf", results = config["results"]),
 		expand("{results}/length-distribution.pdf", results = config["results"])

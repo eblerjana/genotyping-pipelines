@@ -25,11 +25,3 @@ callsets:
    reference: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/results/data/fasta/hg38.fa"
 
 populations: "/gpfs/project/projects/medbioinf/users/ebler/minigraph-cactus-paper/genotyping-experiments-hg38/resources/20130606_g1k_3202_samples_ped_population.ext.tsv"
-
-
-#############################################
-# Optional: BED files to stratify results
-#############################################
-
-regions:
- easy: /gpfs/project/projects/medbioinf/users/ebler/hgsvc3/data/bed/CHM13_notinalldifficultregions.bed
