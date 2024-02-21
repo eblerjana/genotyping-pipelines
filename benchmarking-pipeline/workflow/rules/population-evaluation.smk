@@ -1,16 +1,15 @@
 import gzip
-configfile: "config/config.yaml"
 
 cohort_samples = []
-for line in open(config['reads'], 'r'):
+for line in open(READS, 'r'):
 	if line.startswith('#'):
 		continue
 	fields = line.strip().split() 
 	cohort_samples.append(fields[1])
 
 panel_samples = {}
-for callset in config['callsets'].keys():
-	for line in gzip.open(config['callsets'][callset]['multi'], 'rt'):
+for callset in CALLSETS.keys():
+	for line in gzip.open(CALLSETS[callset]['multi'], 'rt'):
 		if line.startswith("#CHROM"):
 			panel_samples[callset] = line.strip().split()[9:]
 			break
@@ -18,7 +17,7 @@ for callset in config['callsets'].keys():
 
 rule collect_samples:
 	input:
-		config['reads']
+		READS
 	output:
 		all="{results}/population-typing/{callset}/sample-index.tsv",
 		related="{results}/population-typing/{callset}/sample-index-related.tsv",
@@ -68,7 +67,7 @@ rule extract_samples:
 rule check_consistent_trios:
 	input:
 		vcf = "{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_bi_all.vcf.gz",
-		ped = config['reads'],
+		ped = READS,
 		samples = "{results}/population-typing/{callset}/sample-index.tsv"
 	output:
 		variant_stats="{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/mendelian-statistics_bi_all.tsv",
@@ -93,7 +92,7 @@ rule compute_statistics:
 	input:
 		vcf = "{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/unrelated-samples_bi_all.vcf.gz",
 		vcf_all = "{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_bi_all.vcf.gz",
-		panel = lambda wildcards: config['callsets'][wildcards.callset]['bi']
+		panel = lambda wildcards: CALLSETS[wildcards.callset]['bi']
 	output:
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/genotyping-statistics_bi_all.tsv"
 	conda:
@@ -116,7 +115,7 @@ rule compute_statistics:
 rule genotype_concordance_variants:
 	input:
 		computed="{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_bi_all.vcf.gz",
-		true = lambda wildcards: config['callsets'][wildcards.callset]['bi']
+		true = lambda wildcards: CALLSETS[wildcards.callset]['bi']
 	output:
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/self_bi_all_variant-stats.tsv"
 	params:
@@ -142,7 +141,7 @@ rule genotype_concordance_variants:
 
 rule variant_id_to_bubble:
 	input:
-		lambda wildcards: config['callsets'][wildcards.callset]['multi']
+		lambda wildcards: CALLSETS[wildcards.callset]['multi']
 	output:
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/bubble-statistics_bi_all.tsv"
 	shell:
@@ -155,8 +154,8 @@ rule variant_id_to_bubble:
 
 rule annotate_variants:
 	input:
-		vcf = lambda wildcards: config['callsets'][wildcards.callset]['bi'],
-		bed = lambda wildcards: config['callsets'][wildcards.callset]['repeat_regions']
+		vcf = lambda wildcards: CALLSETS[wildcards.callset]['bi'],
+		bed = lambda wildcards: CALLSETS[wildcards.callset]['repeat_regions']
 	output:
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/annotations_bi_all.tsv"
 	conda:

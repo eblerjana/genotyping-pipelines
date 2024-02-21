@@ -1,4 +1,10 @@
 configfile: "config/config.yaml"
+
+GENOTYPED_SETS = config['callsets']
+POPULATIONS = config['populations']
+REGIONS = config['regions']
+
+
 include: "rules/compute-sv-counts-collapse.smk"
 
 rule all:

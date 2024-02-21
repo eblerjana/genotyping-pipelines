@@ -1,4 +1,4 @@
-configfile: "config-test.yaml"
+configfile: "config.yaml"
 
 CALLSETS = config['callsets']
 VCFBUB = config["vcfbub"]

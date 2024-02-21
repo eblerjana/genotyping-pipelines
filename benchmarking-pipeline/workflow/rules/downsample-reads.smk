@@ -1,7 +1,5 @@
-configfile: "config/config.yml"
-
 downsampling_reads = {}
-for line in open(config['reads'], 'r'):
+for line in open(READS, 'r'):
         if line.startswith('#'):
                 continue
         fields = line.strip().split()
@@ -13,7 +11,7 @@ for line in open(config['reads'], 'r'):
 rule align_reads:
 	input:
 		reads = lambda wildcards: downsampling_reads[wildcards.sample],
-		fasta = lambda wildcards: config['callsets'][wildcards.callset]['reference'] 
+		fasta = lambda wildcards: CALLSETS[wildcards.callset]['reference'] 
 	output:
 		bam = "{results}/downsampling/{callset}/{coverage}/aligned/{sample}_full.bam",
 		bai = "{results}/downsampling/{callset}/{coverage}/aligned/{sample}_full.bam.bai"

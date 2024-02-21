@@ -1,13 +1,11 @@
-configfile: "config/config.yaml"
-
-callsets = [c for c in config['callsets'].keys()]
+callsets = [c for c in GENOTYPED_SETS.keys()]
 
 ## Note: this pipeline considers only chromosomes 1-22 + chr X
 
 # also determine the list of samples contained in each VCF
 rule prepare_vcf:
 	input:
-		lambda wildcards: config['callsets'][wildcards.source]['vcf']
+		lambda wildcards: GENOTYPED_SETS[wildcards.source]['vcf']
 	output:
 		samples = "{results}/{source}/vcfs/{source}_all.tsv"
 	wildcard_constraints:
@@ -44,9 +42,9 @@ rule intersect_samples:
 # add AF,AN,AC tags to VCFs (to make sure all VCFs have them). HPRC variants first need to be merged with truvari
 rule extract_intersection_samples_collapse:
 	input:
-		vcf= lambda wildcards: config['callsets'][wildcards.source]['vcf'],
+		vcf= lambda wildcards: GENOTYPED_SETS[wildcards.source]['vcf'],
 		samples = "{results}/samples-intersection.tsv",
-		reference = lambda wildcards: config['callsets'][wildcards.source]['reference']
+		reference = lambda wildcards: GENOTYPED_SETS[wildcards.source]['reference']
 	output:
 		unmerged=temp("{results}/{source}/vcfs/tmp-{source}_intersection_full-unmerged.vcf.gz"),
 		merged="{results}/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz"
@@ -69,7 +67,7 @@ rule extract_intersection_samples_collapse:
 # add AF,AN,AC tags to VCFs (to make sure all VCFs have them)
 rule extract_intersection_samples:
 	input:
-		vcf= lambda wildcards: config['callsets'][wildcards.source]['vcf'],
+		vcf= lambda wildcards: GENOTYPED_SETS[wildcards.source]['vcf'],
 		samples = "{results}/samples-intersection.tsv"
 	output:
 		"{results}/{source}/vcfs/{source}_intersection_full_raw.vcf.gz"
@@ -97,7 +95,7 @@ rule extract_intersection_samples:
 rule annotate_calls:
 	input:
 		vcf="{filename}.vcf.gz",
-		regions = [v for k,v in config["regions"].items()]
+		regions = [v for k,v in REGIONS.items()]
 	output:
 		temp("{filename}_annotated.txt.gz")
 	conda:
@@ -105,7 +103,7 @@ rule annotate_calls:
 	resources:
 		mem_total_mb=80000
 	params:
-		names= [k for k,v in config["regions"].items()]
+		names= [k for k,v in REGIONS.items()]
 	shell:
 		"bedtools annotate -i {input.vcf} -files {input.regions} | python3 workflow/scripts/annotate_repeats.py -vcf {input.vcf} -names {params.names} -format vcf | bgzip > {output}"
 
@@ -113,9 +111,9 @@ rule annotate_calls:
 
 rule plot_sv_counts_filtered:
 	input:
-		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw.vcf.gz", source = [s for s in callsets if not config['callsets'][s]['collapse']]),
-		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz", source = [s for s in callsets if config['callsets'][s]['collapse']]),
-		populations = config['populations']
+		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw.vcf.gz", source = [s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
+		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz", source = [s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
+		populations = POPULATIONS
 	output:
 		"{results}/sv-count-comparison.pdf"
 	log:
@@ -123,8 +121,8 @@ rule plot_sv_counts_filtered:
 	conda:
 		"../envs/plotting.yml"
 	params:
-		names_raw = ' '.join([s for s in callsets if not config['callsets'][s]['collapse']]),
-		names_collapsed = ' '.join([s for s in callsets if config['callsets'][s]['collapse']]),
+		names_raw = ' '.join([s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
+		names_collapsed = ' '.join([s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
 		outname = "{results}/sv-count-comparison",
 	shell:
 		"python3 workflow/scripts/plot-sv-counts.py -vcfs {input.collapse} {input.raw} -names {params.names_collapsed} {params.names_raw} -o {params.outname} -pop {input.populations} &> {log}"
@@ -133,9 +131,9 @@ rule plot_sv_counts_filtered:
 
 rule plot_sv_counts_filtered_annotated:
 	input:
-		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw_annotated.txt.gz", source = [s for s in callsets if not config['callsets'][s]['collapse']]),
-		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed_annotated.txt.gz", source = [s for s in callsets if config['callsets'][s]['collapse']]),
-		populations = config['populations']
+		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw_annotated.txt.gz", source = [s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
+		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed_annotated.txt.gz", source = [s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
+		populations = POPULATIONS
 	output:
 		"{results}/sv-count-comparison_annotated.pdf"
 	log:
@@ -143,10 +141,10 @@ rule plot_sv_counts_filtered_annotated:
 	conda:
 		"../envs/plotting.yml"
 	params:
-		names_raw = ' '.join([s for s in callsets if not config['callsets'][s]['collapse']]),
-		names_collapsed = ' '.join([s for s in callsets if config['callsets'][s]['collapse']]),
+		names_raw = ' '.join([s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
+		names_collapsed = ' '.join([s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
 		outname = "{results}/sv-count-comparison_annotated",
-		annotations =  [k for k,v in config["regions"].items()]
+		annotations =  [k for k,v in REGIONS.items()]
 	shell:
 		"python3 workflow/scripts/plot-sv-counts.py -vcfs {input.collapse} {input.raw} -names {params.names_collapsed} {params.names_raw} -o {params.outname} -pop {input.populations} --annotations {params.annotations} &> {log}"
 
@@ -161,9 +159,9 @@ rule plot_sv_counts_filtered_annotated:
 
 rule plot_length_distribution:
 	input:
-		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw.vcf.gz", source = [s for s in callsets if not config['callsets'][s]['collapse']]),
-		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz", source = [s for s in callsets if config['callsets'][s]['collapse']]),
-		populations = config['populations']
+		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw.vcf.gz", source = [s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
+		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz", source = [s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
+		populations = POPULATIONS
 	output:
 		"{results}/length-distribution.pdf"
 	log:
@@ -171,8 +169,8 @@ rule plot_length_distribution:
 	conda:
 		"../envs/plotting.yml"
 	params:
-		names_raw = ' '.join([s for s in callsets if not config['callsets'][s]['collapse']]),
-		names_collapsed = ' '.join([s for s in callsets if config['callsets'][s]['collapse']]),
+		names_raw = ' '.join([s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
+		names_collapsed = ' '.join([s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
 	shell:
 		"python3 workflow/scripts/plot-variant-length.py --callsets {input.collapse} {input.raw} --names {params.names_collapsed} {params.names_raw} -a 0.05 -o {output} &> {log}"
 

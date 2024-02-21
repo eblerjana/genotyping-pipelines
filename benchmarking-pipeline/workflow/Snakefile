@@ -1,10 +1,22 @@
 configfile: 'config/config.yaml'
+
+
+CALLSETS = config['callsets']
+READS = config['reads']
+PANGENIE = config['pangenie']
+PANGENIE_MODULES = config['pangenie-modules']
+DOWNSAMPLING = config['downsampling']
+RESULTS = config['results']
+
+
 include: 'rules/leave-one-out.smk'
 include: 'rules/population-typing.smk'
 include: 'rules/population-evaluation.smk'
 
 coverages = ['full'] + config['downsampling']
 versions_to_run = [v for v in config['pangenie'].keys()] + [v for v in config['pangenie-modules'].keys()]
+
+
 
 
 

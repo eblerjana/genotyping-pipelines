@@ -1,11 +1,8 @@
 from collections import defaultdict
 
-configfile: "config/config.yaml"
-
-
 samples = defaultdict(lambda: dict())
 
-for line in open(config['reads'], 'r'):
+for line in open(READS, 'r'):
 	if line.startswith('#'):
 		continue
 	fields = line.split()
@@ -13,16 +10,16 @@ for line in open(config['reads'], 'r'):
 	reads = fields[7]
 	samples[sample]['full'] = reads
 
-	for coverage in config['downsampling']:
-		samples[sample][coverage] = config["results"] + "/downsampling/" + coverage + "/" + sample + "_{coverage}.fa.gz"
+	for coverage in DOWNSAMPLING:
+		samples[sample][coverage] = RESULTS + "/downsampling/" + coverage + "/" + sample + "_{coverage}.fa.gz"
 
 
 regions = defaultdict(list)
 chromosomes = defaultdict(list)
 chromosome_lengths = defaultdict(lambda: defaultdict(int))
 
-for callset in config['callsets'].keys():
-	for line in open(config['callsets'][callset]['reference'] + '.fai', 'r'):
+for callset in CALLSETS.keys():
+	for line in open(CALLSETS[callset]['reference'] + '.fai', 'r'):
 		fields = line.strip().split()
 		chrom = fields[0]
 		if not chrom in [str(i) for i in range(1,23)] + ['X', 'Y'] and not chrom in ['chr' + str(i) for i in range(1,23)] + ['chrX', 'chrY']:
@@ -31,7 +28,7 @@ for callset in config['callsets'].keys():
 		chromosome_lengths[callset][chrom] = int(fields[1])
 
 step_size = 1000000
-for callset in config['callsets'].keys():
+for callset in CALLSETS.keys():
 	for chromosome in sorted(chromosomes[callset]):
 		pos = 1
 		while pos < chromosome_lengths[callset][chromosome]:
@@ -49,7 +46,7 @@ print('Running population genotyping on ' + str(len(samples)) + ' samples.')
 # if there are variants with AF=0, remove them
 rule prepare_population_panel:
 	input:
-		lambda wildcards: config['callsets'][wildcards.callset]['multi']
+		lambda wildcards: CALLSETS[wildcards.callset]['multi']
 	output:
 		"{results}/population-typing/{callset}/panel.vcf"
 	conda:
@@ -64,7 +61,7 @@ rule prepare_population_panel:
 rule genotyping:
 	input:
 		reads=lambda wildcards: samples[wildcards.sample][wildcards.coverage],
-		reference=lambda wildcards: config['callsets'][wildcards.callset]['reference'],
+		reference=lambda wildcards: CALLSETS[wildcards.callset]['reference'],
 		panel = "{results}/population-typing/{callset}/panel.vcf"
 	output:
 		reads = temp("{results}/population-typing/{callset}/{version}/{coverage}/genotyping/reads-{sample}.fa"),
@@ -73,7 +70,7 @@ rule genotyping:
 	log:
 		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}.log"
 	wildcard_constraints:
-		version = "|".join([k for k in config['pangenie'].keys()] + ['^' + k for k in config['pangenie-modules']])
+		version = "|".join([k for k in PANGENIE.keys()] + ['^' + k for k in PANGENIE_MODULES])
 	threads: 24
 	resources:
 		mem_total_mb = lambda wildcards: 180000 if "v100" in wildcards.version else 100000,
@@ -81,7 +78,7 @@ rule genotyping:
 		runtime_min = 1
 	params:
 		out_prefix = "{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}",
-		pangenie = lambda wildcards: config['pangenie'][wildcards.version]
+		pangenie = lambda wildcards: PANGENIE[wildcards.version]
 	benchmark:
 		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_benchmark.txt"
 	priority: 1
@@ -96,14 +93,14 @@ rule genotyping:
 # genotype variants with pangenie in the modularized way - indexing step (to be done once)
 rule genotyping_index:
 	input:
-		reference=lambda wildcards: config['callsets'][wildcards.callset]['reference'],
+		reference=lambda wildcards: CALLSETS[wildcards.callset]['reference'],
 		panel = "{results}/population-typing/{callset}/panel.vcf"
 	output:
 		directory("{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/")
 	log:
 		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/pangenie-index.log"
 	wildcard_constraints:
-		version = "|".join([k for k in config['pangenie-modules'].keys()] + ['^' + k for k in config['pangenie']])
+		version = "|".join([k for k in PANGENIE_MODULES.keys()] + ['^' + k for k in PANGENIE])
 	threads: 24
 	resources:
 		mem_total_mb = 80000,
@@ -111,7 +108,7 @@ rule genotyping_index:
 		runtime_min = 1
 	params:
 		out_prefix = "{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/index",
-		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[0] + "PanGenie"
+		pangenie = lambda wildcards: PANGENIE_MODULES[wildcards.version].split('PanGenie')[0] + "PanGenie"
 	benchmark:
 		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/indexing_benchmark.txt"
 	priority: 1
@@ -132,7 +129,7 @@ rule genotyping_genotype:
 	log:
 		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}.log"
 	wildcard_constraints:
-		 version = "|".join([k for k in config['pangenie-modules'].keys()] + ['^' + k for k in config['pangenie']])
+		 version = "|".join([k for k in PANGENIE_MODULES.keys()] + ['^' + k for k in PANGENIE])
 	threads: 24
 	resources:
 		mem_total_mb = 90000,
@@ -141,8 +138,8 @@ rule genotyping_genotype:
 	params:
 		out_prefix = "{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}",
 		in_prefix = "{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/index",
-		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[0] + " PanGenie",
-		pangenie_params = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[-1]
+		pangenie = lambda wildcards: PANGENIE_MODULES[wildcards.version].split('PanGenie')[0] + " PanGenie",
+		pangenie_params = lambda wildcards: PANGENIE_MODULES[wildcards.version].split('PanGenie')[-1]
 	benchmark:
 		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_benchmark.txt"
 	priority: 1
@@ -329,7 +326,7 @@ rule filter_snvs:
 # convert multi-allelic vcf to biallelic representation
 rule create_biallelic_vcf:
 	input:
-		template = lambda wildcards: config['callsets'][wildcards.callset]['bi'],
+		template = lambda wildcards: CALLSETS[wildcards.callset]['bi'],
 		vcf="{results}/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_multi_all.vcf.gz"
 	output:
 		vcf_bi_all="{results}/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_bi_all.vcf.gz",
