@@ -1,10 +1,16 @@
-configfile: "config.yaml"
+configfile: "config-test.yaml"
+
+CALLSETS = config['callsets']
+VCFBUB = config["vcfbub"]
+
+
+for callset in CALLSETS.keys():
+	CALLSETS[callset]['multi'] = "{results}/vcf/{caller}/{caller}_filtered_ids.vcf.gz".format(results = config['results'], caller = callset)
+	CALLSETS[callset]['bi'] = "{results}/vcf/{caller}/{caller}_filtered_ids_biallelic.vcf.gz".format(results = config['results'], caller = callset)
 
 include: 'rules/mc-vcf.smk'
 
-callers = [k for k in config['vcf'].keys()]
-
 rule all:
 	input:
-		expand("{results}/vcf/{caller}/{caller}_filtered_ids.vcf.gz", results = config['results'], caller = callers),
-		expand("{results}/vcf/{caller}/{caller}_filtered_ids_biallelic.vcf.gz", results = config['results'], caller = callers)
+		expand("{results}/vcf/{caller}/{caller}_filtered_ids.vcf.gz", results = config['results'], caller = CALLSETS.keys()),
+		expand("{results}/vcf/{caller}/{caller}_filtered_ids_biallelic.vcf.gz", results = config['results'], caller = CALLSETS.keys())

@@ -1,13 +1,5 @@
 import gzip
 
-configfile: "config.yaml"
-
-reference_to_ignore = "CHM13" if config['reference_version'] == "GRCh38" else "GRCh38"
-
-
-# chromosomes = [config['reference_prefix'] + str(i) for i in range(1,23)] + ['chrX']
-vcfbub = config['vcfbub']
-
 # threshold on bubble size used for vcfbub
 threshold = 100000
 
@@ -18,7 +10,7 @@ min_frac = 0.8
 # filter out LV>0 bubbles
 rule filter_bubbles:
 	input:
-		lambda wildcards: config['vcf'][wildcards.caller]
+		lambda wildcards: CALLSETS[wildcards.caller]['vcf']
 	output:
 		"{results}/vcf/{caller}/{caller}.vcf.gz"
 	conda:
@@ -27,7 +19,7 @@ rule filter_bubbles:
 		mem_total_mb=50000
 	shell:
 		"""
-		{vcfbub} -l 0 -r {threshold} --input {input} | bgzip -c > {output}
+		{VCFBUB} -l 0 -r {threshold} --input {input} | bgzip -c > {output}
 		tabix -p vcf {output}
 		"""
 
@@ -35,7 +27,7 @@ rule filter_bubbles:
 rule correct_sex_chromosomes:
 	input:
 		vcf = "{results}/vcf/{caller}/{caller}.vcf.gz",
-		sample_info = lambda wildcards: config['sample_info'][wildcards.caller]
+		sample_info = lambda wildcards: CALLSETS[wildcards.caller]['sample_info']
 	output:
 		"{results}/vcf/{caller}/{caller}_corrected-sex-chromosomes.vcf.gz"
 	log:
@@ -57,7 +49,7 @@ rule correct_sex_chromosomes:
 # - contain Ns in sequence
 rule filter_vcf:
 	input:
-		"{results}/vcf/{caller}/{caller}.vcf.gz" if not config['sample_info'] else "{results}/vcf/{caller}/{caller}_corrected-sex-chromosomes.vcf.gz"
+		lambda wildcards: "{results}/vcf/{caller}/{caller}.vcf.gz" if not CALLSETS[wildcards.caller]['sample_info'] else "{results}/vcf/{caller}/{caller}_corrected-sex-chromosomes.vcf.gz"
 	output:
 		temp("{results}/vcf/{caller}/{caller}_filtered.vcf")
 	conda:
@@ -68,8 +60,10 @@ rule filter_vcf:
 		mem_total_mb=20000,
 		runtime_hrs=0,
 		runtime_min=59
+	params:
+		reference_to_ignore = lambda wildcards: "CHM13" if CALLSETS[wildcards.caller]['reference_version'] == "GRCh38" else "GRCh38"
 	shell:
-		"bcftools view --samples ^{reference_to_ignore} --force-samples  {input} | bcftools view --min-ac 1 | python3 workflow/scripts/filter-vcf.py {min_frac} 2> {log} 1> {output}"
+		"bcftools view --samples ^{params.reference_to_ignore} --force-samples  {input} | bcftools view --min-ac 1 | python3 workflow/scripts/filter-vcf.py {min_frac} 2> {log} 1> {output}"
 
 
 # remove alternative alleles that are not covered by any haplotype
@@ -92,7 +86,7 @@ rule trim_alt_alleles:
 rule annotate_vcf:
 	input:
 		vcf="{results}/vcf/{caller}/{caller}_filtered_trim.vcf",
-		gfa=lambda wildcards: config['gfa'][wildcards.caller]
+		gfa=lambda wildcards: CALLSETS[wildcards.caller]['gfa']
 	output:
 		multi="{results}/vcf/{caller}/{caller}_filtered_ids.vcf",
 		multi_tmp=temp("{results}/vcf/{caller}/{caller}_filtered_ids-tmp.vcf"),

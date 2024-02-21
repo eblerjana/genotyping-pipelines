@@ -14,7 +14,7 @@ for line in open(config['reads'], 'r'):
 	samples[sample]['full'] = reads
 
 	for coverage in config['downsampling']:
-		samples[sample][coverage] = "results/downsampling/" + coverage + "/" + sample + "_{coverage}.fa.gz"
+		samples[sample][coverage] = config["results"] + "/downsampling/" + coverage + "/" + sample + "_{coverage}.fa.gz"
 
 
 regions = defaultdict(list)
@@ -51,11 +51,9 @@ rule prepare_population_panel:
 	input:
 		lambda wildcards: config['callsets'][wildcards.callset]['multi']
 	output:
-		"results/population-typing/{callset}/panel.vcf"
+		"{results}/population-typing/{callset}/panel.vcf"
 	conda:
 		"../envs/genotyping.yml"
-#	log:
-#		"results/population-typing/{callset}/panel.log"
 	resources:
 		mem_total_mb = 20000
 	shell:
@@ -67,13 +65,13 @@ rule genotyping:
 	input:
 		reads=lambda wildcards: samples[wildcards.sample][wildcards.coverage],
 		reference=lambda wildcards: config['callsets'][wildcards.callset]['reference'],
-		panel = "results/population-typing/{callset}/panel.vcf"
+		panel = "{results}/population-typing/{callset}/panel.vcf"
 	output:
-		reads = temp("results/population-typing/{callset}/{version}/{coverage}/genotyping/reads-{sample}.fa"),
-		path_segments = temp("results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_path_segments.fasta"),
-		genotyping_vcf = temp("results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_genotyping.vcf"),
+		reads = temp("{results}/population-typing/{callset}/{version}/{coverage}/genotyping/reads-{sample}.fa"),
+		path_segments = temp("{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_path_segments.fasta"),
+		genotyping_vcf = temp("{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_genotyping.vcf"),
 	log:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}.log"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}.log"
 	wildcard_constraints:
 		version = "|".join([k for k in config['pangenie'].keys()] + ['^' + k for k in config['pangenie-modules']])
 	threads: 24
@@ -82,10 +80,10 @@ rule genotyping:
 		runtime_hrs = 5,
 		runtime_min = 1
 	params:
-		out_prefix = "results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}",
+		out_prefix = "{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}",
 		pangenie = lambda wildcards: config['pangenie'][wildcards.version]
 	benchmark:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_benchmark.txt"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_benchmark.txt"
 	priority: 1
 	shell:
 		"""
@@ -99,11 +97,11 @@ rule genotyping:
 rule genotyping_index:
 	input:
 		reference=lambda wildcards: config['callsets'][wildcards.callset]['reference'],
-		panel = "results/population-typing/{callset}/panel.vcf"
+		panel = "{results}/population-typing/{callset}/panel.vcf"
 	output:
-		directory("results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/")
+		directory("{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/")
 	log:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/pangenie-index.log"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/pangenie-index.log"
 	wildcard_constraints:
 		version = "|".join([k for k in config['pangenie-modules'].keys()] + ['^' + k for k in config['pangenie']])
 	threads: 24
@@ -112,10 +110,10 @@ rule genotyping_index:
 		runtime_hrs = 5,
 		runtime_min = 1
 	params:
-		out_prefix = "results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/index",
+		out_prefix = "{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/index",
 		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[0] + "PanGenie"
 	benchmark:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/indexing_benchmark.txt"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/indexing_benchmark.txt"
 	priority: 1
 	shell:
 		"""
@@ -127,12 +125,12 @@ rule genotyping_index:
 # genotype variants with pangenie in modularized way - genotyping step (to be done per sample)
 rule genotyping_genotype:
 	input:
-		directory("results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/"),
+		directory("{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/"),
 		reads=lambda wildcards: samples[wildcards.sample][wildcards.coverage]
 	output:
-		genotyping_vcf = temp("results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_genotyping.vcf"),
+		genotyping_vcf = temp("{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_genotyping.vcf"),
 	log:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}.log"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}.log"
 	wildcard_constraints:
 		 version = "|".join([k for k in config['pangenie-modules'].keys()] + ['^' + k for k in config['pangenie']])
 	threads: 24
@@ -141,12 +139,12 @@ rule genotyping_genotype:
 		runtime_hrs = 5,
 		runtime_min = 1
 	params:
-		out_prefix = "results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}",
-		in_prefix = "results/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/index",
+		out_prefix = "{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}",
+		in_prefix = "{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/index",
 		pangenie = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[0] + " PanGenie",
 		pangenie_params = lambda wildcards: config['pangenie-modules'][wildcards.version].split('PanGenie')[-1]
 	benchmark:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_benchmark.txt"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_benchmark.txt"
 	priority: 1
 	shell:
 		"""
@@ -161,11 +159,11 @@ rule genotyping_genotype:
 # compress multiallelic file and create version without SNVs
 rule postprocess_multi:
 	input:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_genotyping.vcf"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_genotyping.vcf"
 	output:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_multi_all.vcf.gz"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_multi_all.vcf.gz"
 	log:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_postprocess.log"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_postprocess.log"
 	resources:
 		mem_total_mb=10000,
 		runtime_hrs=0,
@@ -173,7 +171,7 @@ rule postprocess_multi:
 	conda:
 		"../envs/genotyping.yml"
 	benchmark:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_postprocess_benchmark.txt"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_postprocess_benchmark.txt"
 	shell:
 		"(/usr/bin/time -v sh workflow/scripts/postprocess-multi.sh {input} {output} ) &> {log}"
 
@@ -181,9 +179,9 @@ rule postprocess_multi:
 # tabix vcf file
 rule tabix_vcf:
 	input:
-		"results/population-typing/{filename}.vcf.gz"
+		"{results}/population-typing/{filename}.vcf.gz"
 	output:
-		"results/population-typing/{filename}.vcf.gz.tbi"
+		"{results}/population-typing/{filename}.vcf.gz.tbi"
 	resources:
 		mem_total_mb=20000,
 		runtime_hrs=2,
@@ -200,10 +198,10 @@ ruleorder: create_biallelic_vcf > tabix_vcf
 # prepare list of multiallelic files to be merged
 rule create_file_list_multi:
 	input:
-		vcfs=lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/genotyping/{sample}_genotyping_multi_all.vcf.gz", sample=sorted(samples.keys())),
-#		tbi=lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/genotyping/{sample}_genotyping_multi_all.vcf.gz.tbi", sample=sorted(samples.keys()))
+		vcfs=lambda wildcards: expand("{{results}}/population-typing/{{callset}}/{{version}}/{{coverage}}/genotyping/{sample}_genotyping_multi_all.vcf.gz", sample=sorted(samples.keys())),
+#		tbi=lambda wildcards: expand("{{results}}/population-typing/{{callset}}/{{version}}/{{coverage}}/genotyping/{sample}_genotyping_multi_all.vcf.gz.tbi", sample=sorted(samples.keys()))
 	output:
-		"results/population-typing/{callset}/{version}/{coverage}/multi_all_filelist.tsv"
+		"{results}/population-typing/{callset}/{version}/{coverage}/multi_all_filelist.tsv"
 	run:
 		f = open(output[0], 'w')
 		for name in input.vcfs:
@@ -214,13 +212,13 @@ rule create_file_list_multi:
 # merge single-sample vcfs into multi-sample vcf for a specific region
 rule merge_vcfs_by_region_multi:
 	input:
-		"results/population-typing/{callset}/{version}/{coverage}/multi_all_filelist.tsv"
+		"{results}/population-typing/{callset}/{version}/{coverage}/multi_all_filelist.tsv"
 	output:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_multi_all_{region}.vcf.gz"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_multi_all_{region}.vcf.gz"
 	log:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_multi_all_{region}.log"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_multi_all_{region}.log"
 	benchmark:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_multi_all_{region}_benchmark.txt"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_multi_all_{region}_benchmark.txt"
 	resources:
 #		mem_total_mb = 50000,
 		mem_total_mb = 800000,
@@ -237,10 +235,10 @@ rule merge_vcfs_by_region_multi:
 # prepare list of biallelic files to be merged
 rule create_file_list_bi:
 	input:
-		vcfs = lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/genotyping/{sample}_genotyping_bi_all.vcf.gz", sample=sorted(samples.keys())),
-#		tbi = lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/genotyping/{sample}_genotyping_bi_all.vcf.gz.tbi", sample=sorted(samples.keys()))
+		vcfs = lambda wildcards: expand("{{results}}/population-typing/{{callset}}/{{version}}/{{coverage}}/genotyping/{sample}_genotyping_bi_all.vcf.gz", sample=sorted(samples.keys())),
+#		tbi = lambda wildcards: expand("{{results}}/population-typing/{{callset}}/{{version}}/{{coverage}}/genotyping/{sample}_genotyping_bi_all.vcf.gz.tbi", sample=sorted(samples.keys()))
 	output:
-		"results/population-typing/{callset}/{version}/{coverage}/bi_all_filelist.tsv"
+		"{results}/population-typing/{callset}/{version}/{coverage}/bi_all_filelist.tsv"
 	run:
 		f = open(output[0], 'w')
 		for name in input.vcfs:
@@ -251,11 +249,11 @@ rule create_file_list_bi:
 # merge all biallelic vcfs into a multisample vcf file
 rule merge_vcfs_by_region_bi:
 	input:
-		"results/population-typing/{callset}/{version}/{coverage}/bi_all_filelist.tsv"
+		"{results}/population-typing/{callset}/{version}/{coverage}/bi_all_filelist.tsv"
 	output:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_bi_all_{region}.vcf.gz"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_bi_all_{region}.vcf.gz"
 	log:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_bi_all_{region}.log"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_bi_all_{region}.log"
 	resources:
 		mem_total_mb = 100000,
 #		mem_total_mb = 1000000,
@@ -266,7 +264,7 @@ rule merge_vcfs_by_region_bi:
 		region = "chr[0-9A-Z]+:[0-9]+-[0-9]+"
 	threads: 10
 	benchmark:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_bi_all_{region}_benchmark.txt"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_bi_all_{region}_benchmark.txt"
 	conda:
 		"../envs/whatshap.yml" # NOTE: bcftools.yml has a problem using +fill-tags plugin
 	shell:
@@ -276,10 +274,10 @@ rule merge_vcfs_by_region_bi:
 # combine all region-specific vcfs into one whole genome one
 rule concat_vcfs_filelist:
 	input:
-		vcfs = lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/merged-vcfs/region-wise/pangenie_merged_{{what}}_all_{region}.vcf.gz", region=regions[wildcards.callset]),
-	#	tbi = lambda wildcards: expand("results/population-typing/{{callset}}/{{version}}/{{coverage}}/merged-vcfs/region-wise/pangenie_merged_{{what}}_all_{region}.vcf.gz.tbi", region=regions[wildcards.callset])
+		vcfs = lambda wildcards: expand("{{results}}/population-typing/{{callset}}/{{version}}/{{coverage}}/merged-vcfs/region-wise/pangenie_merged_{{what}}_all_{region}.vcf.gz", region=regions[wildcards.callset]),
+	#	tbi = lambda wildcards: expand("{{results}}/population-typing/{{callset}}/{{version}}/{{coverage}}/merged-vcfs/region-wise/pangenie_merged_{{what}}_all_{region}.vcf.gz.tbi", region=regions[wildcards.callset])
 	output:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/concat_{what}_all_filelist.tsv"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/concat_{what}_all_filelist.tsv"
 	run:
 		f = open(output[0], 'w')
 		for name in input.vcfs:
@@ -290,13 +288,13 @@ rule concat_vcfs_filelist:
 # concat per-region vcfs
 rule concat_vcfs:
 	input:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/concat_{what}_all_filelist.tsv"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/concat_{what}_all_filelist.tsv"
 	output:
-		vcf="results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.vcf.gz"
+		vcf="{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.vcf.gz"
 	log:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.log"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.log"
 	benchmark:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all_benchmark.txt"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all_benchmark.txt"
 	resources:
 		mem_total_mb=50000,
 		runtime_hrs=29,
@@ -310,14 +308,14 @@ rule concat_vcfs:
 # remove SNVs from vcf file
 rule filter_snvs:
 	input:
-		vcf="results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.vcf.gz",
-		tbi="results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.vcf.gz.tbi"
+		vcf="{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.vcf.gz",
+		tbi="{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.vcf.gz.tbi"
 	output:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_nosnvs.vcf.gz"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_nosnvs.vcf.gz"
 	log:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_nosnvs.log"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_nosnvs.log"
 	benchmark:
-		"results/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_nosnvs_benchmark.txt"
+		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_nosnvs_benchmark.txt"
 	resources:
 		mem_total_mb=50000,
 		runtime_hrs=27,
@@ -332,14 +330,14 @@ rule filter_snvs:
 rule create_biallelic_vcf:
 	input:
 		template = lambda wildcards: config['callsets'][wildcards.callset]['bi'],
-		vcf="results/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_multi_all.vcf.gz"
+		vcf="{results}/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_multi_all.vcf.gz"
 	output:
-		vcf_bi_all="results/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_bi_all.vcf.gz",
-		tbi_bi_all="results/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_bi_all.vcf.gz.tbi"
+		vcf_bi_all="{results}/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_bi_all.vcf.gz",
+		tbi_bi_all="{results}/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_bi_all.vcf.gz.tbi"
 	log:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_postprocess_bi.log"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_postprocess_bi.log"
 	benchmark:
-		"results/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_postprocess_bi_benchmark.txt"
+		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_postprocess_bi_benchmark.txt"
 	resources:
 		mem_total_mb=30000,
 		runtime_hrs=1,

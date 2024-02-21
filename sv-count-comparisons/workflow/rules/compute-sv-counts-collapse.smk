@@ -9,11 +9,11 @@ rule prepare_vcf:
 	input:
 		lambda wildcards: config['callsets'][wildcards.source]['vcf']
 	output:
-		samples = "results/{source}/vcfs/{source}_all.tsv"
+		samples = "{results}/{source}/vcfs/{source}_all.tsv"
 	wildcard_constraints:
 		source = '|'.join(callsets)
 	log:
-		"results/{source}/vcfs/{source}_all.log"
+		"{results}/{source}/vcfs/{source}_all.log"
 	conda:
 		"../envs/truvari.yml"
 	shell:
@@ -24,9 +24,9 @@ rule prepare_vcf:
 # find out intersection of samples contained in all VCFs
 rule intersect_samples:
 	input:
-		samples = expand("results/{source}/vcfs/{source}_all.tsv", source=callsets)
+		samples = expand("{{results}}/{source}/vcfs/{source}_all.tsv", source=callsets)
 	output:
-		"results/samples-intersection.tsv"
+		"{results}/samples-intersection.tsv"
 	run:
 		result = None
 		for sample in input.samples:
@@ -45,11 +45,11 @@ rule intersect_samples:
 rule extract_intersection_samples_collapse:
 	input:
 		vcf= lambda wildcards: config['callsets'][wildcards.source]['vcf'],
-		samples = "results/samples-intersection.tsv",
+		samples = "{results}/samples-intersection.tsv",
 		reference = lambda wildcards: config['callsets'][wildcards.source]['reference']
 	output:
-		unmerged=temp("results/{source}/vcfs/tmp-{source}_intersection_full-unmerged.vcf.gz"),
-		merged="results/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz"
+		unmerged=temp("{results}/{source}/vcfs/tmp-{source}_intersection_full-unmerged.vcf.gz"),
+		merged="{results}/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz"
 	conda:
 		"../envs/truvari.yml"
 	resources:
@@ -70,9 +70,9 @@ rule extract_intersection_samples_collapse:
 rule extract_intersection_samples:
 	input:
 		vcf= lambda wildcards: config['callsets'][wildcards.source]['vcf'],
-		samples = "results/samples-intersection.tsv"
+		samples = "{results}/samples-intersection.tsv"
 	output:
-		"results/{source}/vcfs/{source}_intersection_full_raw.vcf.gz"
+		"{results}/{source}/vcfs/{source}_intersection_full_raw.vcf.gz"
 	conda:
 		"../envs/truvari.yml"
 	wildcard_constraints:
@@ -113,19 +113,19 @@ rule annotate_calls:
 
 rule plot_sv_counts_filtered:
 	input:
-		raw = lambda wildcards: expand("results/{source}/vcfs/{source}_intersection_full_raw.vcf.gz", source = [s for s in callsets if not config['callsets'][s]['collapse']]),
-		collapse = lambda wildcards: expand("results/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz", source = [s for s in callsets if config['callsets'][s]['collapse']]),
+		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw.vcf.gz", source = [s for s in callsets if not config['callsets'][s]['collapse']]),
+		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz", source = [s for s in callsets if config['callsets'][s]['collapse']]),
 		populations = config['populations']
 	output:
-		"results/sv-count-comparison.pdf"
+		"{results}/sv-count-comparison.pdf"
 	log:
-		"results/sv-count-comparison.log"
+		"{results}/sv-count-comparison.log"
 	conda:
 		"../envs/plotting.yml"
 	params:
 		names_raw = ' '.join([s for s in callsets if not config['callsets'][s]['collapse']]),
 		names_collapsed = ' '.join([s for s in callsets if config['callsets'][s]['collapse']]),
-		outname = "results/sv-count-comparison",
+		outname = "{results}/sv-count-comparison",
 	shell:
 		"python3 workflow/scripts/plot-sv-counts.py -vcfs {input.collapse} {input.raw} -names {params.names_collapsed} {params.names_raw} -o {params.outname} -pop {input.populations} &> {log}"
 
@@ -133,19 +133,19 @@ rule plot_sv_counts_filtered:
 
 rule plot_sv_counts_filtered_annotated:
 	input:
-		raw = lambda wildcards: expand("results/{source}/vcfs/{source}_intersection_full_raw_annotated.txt.gz", source = [s for s in callsets if not config['callsets'][s]['collapse']]),
-		collapse = lambda wildcards: expand("results/{source}/vcfs/{source}_intersection_full_collapsed_annotated.txt.gz", source = [s for s in callsets if config['callsets'][s]['collapse']]),
+		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw_annotated.txt.gz", source = [s for s in callsets if not config['callsets'][s]['collapse']]),
+		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed_annotated.txt.gz", source = [s for s in callsets if config['callsets'][s]['collapse']]),
 		populations = config['populations']
 	output:
-		"results/sv-count-comparison_annotated.pdf"
+		"{results}/sv-count-comparison_annotated.pdf"
 	log:
-		"results/sv-count-comparison_annotated.log"
+		"{results}/sv-count-comparison_annotated.log"
 	conda:
 		"../envs/plotting.yml"
 	params:
 		names_raw = ' '.join([s for s in callsets if not config['callsets'][s]['collapse']]),
 		names_collapsed = ' '.join([s for s in callsets if config['callsets'][s]['collapse']]),
-		outname = "results/sv-count-comparison_annotated",
+		outname = "{results}/sv-count-comparison_annotated",
 		annotations =  [k for k,v in config["regions"].items()]
 	shell:
 		"python3 workflow/scripts/plot-sv-counts.py -vcfs {input.collapse} {input.raw} -names {params.names_collapsed} {params.names_raw} -o {params.outname} -pop {input.populations} --annotations {params.annotations} &> {log}"
@@ -161,13 +161,13 @@ rule plot_sv_counts_filtered_annotated:
 
 rule plot_length_distribution:
 	input:
-		raw = lambda wildcards: expand("results/{source}/vcfs/{source}_intersection_full_raw.vcf.gz", source = [s for s in callsets if not config['callsets'][s]['collapse']]),
-		collapse = lambda wildcards: expand("results/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz", source = [s for s in callsets if config['callsets'][s]['collapse']]),
+		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw.vcf.gz", source = [s for s in callsets if not config['callsets'][s]['collapse']]),
+		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz", source = [s for s in callsets if config['callsets'][s]['collapse']]),
 		populations = config['populations']
 	output:
-		"results/length-distribution.pdf"
+		"{results}/length-distribution.pdf"
 	log:
-		"results/length-distribution.log"
+		"{results}/length-distribution.log"
 	conda:
 		"../envs/plotting.yml"
 	params:

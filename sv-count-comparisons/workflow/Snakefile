@@ -1,6 +1,7 @@
+configfile: "config/config.yaml"
 include: "rules/compute-sv-counts-collapse.smk"
 
 rule all:
 	input:
-		expand("results/sv-count-comparison{regions}.pdf", regions = ["", "_annotated"] if config["regions"] else [""]),
-		"results/length-distribution.pdf"
+		expand("{results}/sv-count-comparison{regions}.pdf", results = config["results"], regions = ["", "_annotated"] if config["regions"] else [""]),
+		expand("{results}/length-distribution.pdf", results = config["results"])

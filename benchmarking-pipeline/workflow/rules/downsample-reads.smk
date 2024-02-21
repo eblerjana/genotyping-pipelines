@@ -15,8 +15,8 @@ rule align_reads:
 		reads = lambda wildcards: downsampling_reads[wildcards.sample],
 		fasta = lambda wildcards: config['callsets'][wildcards.callset]['reference'] 
 	output:
-		bam = "results/downsampling/{callset}/{coverage}/aligned/{sample}_full.bam",
-		bai = "results/downsampling/{callset}/{coverage}/aligned/{sample}_full.bam.bai"
+		bam = "{results}/downsampling/{callset}/{coverage}/aligned/{sample}_full.bam",
+		bai = "{results}/downsampling/{callset}/{coverage}/aligned/{sample}_full.bam.bai"
 	conda:
 		"../envs/downsampling.yml"
 	resources:
@@ -24,7 +24,7 @@ rule align_reads:
 		runtime_hrs = 25,
 		runtime_min = 1
 	log:
-		"results/downsampling/{callset}/{coverage}/aligned/{sample}_full.log"
+		"{results}/downsampling/{callset}/{coverage}/aligned/{sample}_full.log"
 	shell:
 		'(/usr/bin/time -v bwa mem -t {threads} -M {input.fasta} -R "@RG\\tID:{wildcards.sample}\\tLB:lib1\\tPL:illumina\\tPU:unit1\\tSM:{wildcards.sample}" {input.reads} | samtools view -bS | samtools sort -o {output} - ) &> {log}'
 
@@ -32,10 +32,10 @@ rule align_reads:
 # estimate the coverage of the aligned data
 rule compute_bam_coverage:
 	input:
-		full_cov_bam = "results/downsampling/{callset}/{coverage}/aligned/{sample}_full.bam",
-		full_cov_bai = "results/downsampling/{callset}/{coverage}/aligned/{sample}_full.bam.bai"
+		full_cov_bam = "{results}/downsampling/{callset}/{coverage}/aligned/{sample}_full.bam",
+		full_cov_bai = "{results}/downsampling/{callset}/{coverage}/aligned/{sample}_full.bam.bai"
 	output:
-		"results/downsampling/{callset}/{coverage}/aligned/{sample}_full.cov"
+		"{results}/downsampling/{callset}/{coverage}/aligned/{sample}_full.cov"
 	conda:
 		'../env/downsampling.yml'
 	resources:
@@ -43,7 +43,7 @@ rule compute_bam_coverage:
 		runtime_hrs = 5,
 		runtime_min = 1
 	log:
-		"results/downsampling/{callset}/{coverage}/aligned/{sample}_full_cov.log"
+		"{results}/downsampling/{callset}/{coverage}/aligned/{sample}_full_cov.log"
 	shell:
 		"bash workflow/scripts/compute-coverage.sh {input.full_cov_bam} {output} &> {log}"
 
@@ -53,7 +53,7 @@ rule downsample_reads:
 	input:
 		lambda wildcards: downsampling_reads[wildcards.sample]
 	output:
-		"results/downsampling/{callset}/{coverage}/{sample}_{coverage}.fa.gz"
+		"{results}/downsampling/{callset}/{coverage}/{sample}_{coverage}.fa.gz"
 	conda:
 		"../envs/downsampling.yml"
 	resources:
@@ -61,7 +61,7 @@ rule downsample_reads:
 		runtime_hrs = 5,
 		runtime_min = 1
 	log:
-		"results/downsampling/{callset}/{coverage}/{sample}_{coverage}.log"
+		"{results}/downsampling/{callset}/{coverage}/{sample}_{coverage}.log"
 	shell:
 		"bash workflow/scripts/downsample-fasta.sh {input.coverage} {wildcards.fraction} {input} {output} &> {log}"
 
