@@ -10,8 +10,3 @@ callsets:
   sample_info: "sample-info-freeze1-hprc.tsv"
   reference_prefix: "chr"
   reference_version: "CHM13"
-
-
-
-# path to vcfbub executable
-vcfbub: "/gpfs/project/projects/medbioinf/users/ebler/hprc/hprc-experiments/vcfbub/vcfbub-main/target/release/vcfbub"

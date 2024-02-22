@@ -1,32 +1,13 @@
 import gzip
 
-# threshold on bubble size used for vcfbub
-threshold = 100000
-
 # at least this fraction of haplotypes needs to cover a variant allele with a non '.' allele
 min_frac = 0.8
 
 
-# filter out LV>0 bubbles
-rule filter_bubbles:
-	input:
-		lambda wildcards: CALLSETS[wildcards.caller]['vcf']
-	output:
-		"{results}/vcf/{caller}/{caller}.vcf.gz"
-	conda:
-		"../envs/genotyping.yml"
-	resources:
-		mem_total_mb=50000
-	shell:
-		"""
-		{VCFBUB} -l 0 -r {threshold} --input {input} | bgzip -c > {output}
-		tabix -p vcf {output}
-		"""
-
 # correct genotypes on sex chromosomes (human)
 rule correct_sex_chromosomes:
 	input:
-		vcf = "{results}/vcf/{caller}/{caller}.vcf.gz",
+		vcf = lambda wildcards: CALLSETS[wildcards.caller]['vcf'],
 		sample_info = lambda wildcards: CALLSETS[wildcards.caller]['sample_info']
 	output:
 		"{results}/vcf/{caller}/{caller}_corrected-sex-chromosomes.vcf.gz"

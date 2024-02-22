@@ -1,7 +1,6 @@
 configfile: "config.yaml"
 
 CALLSETS = config['callsets']
-VCFBUB = config["vcfbub"]
 
 
 for callset in CALLSETS.keys():
