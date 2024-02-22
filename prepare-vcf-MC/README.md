@@ -41,9 +41,9 @@ callsets:
 
 ## Outputs
 
-* a **multi-allelic** graph VCF called `` results/vcf/{callsetname}/{callsetname}_filtered_ids.vcf`` representing bubbles in the graph
+* a **multi-allelic** graph VCF called `` {results}/vcf/{callsetname}/{callsetname}_filtered_ids.vcf`` representing bubbles in the graph
 
-* a **bi-allelic** callset VCF called `` results/vcf/{callsetname}/{callsetname}_filtered_ids_biallelic.vcf`` representing variant alleles contained in the graph
+* a **bi-allelic** callset VCF called `` {results}/vcf/{callsetname}/{callsetname}_filtered_ids_biallelic.vcf`` representing variant alleles contained in the graph
 
 
 ### How to use the output VCFs with PanGenie
@@ -52,7 +52,7 @@ The **multi-allelic** VCF can be used as input to PanGenie (https://github.com/e
 
 ``` bat
 
-PanGenie -i <input-reads> -v results/vcf/{callsetname}/{callsetname}_filtered_ids.vcf -r <reference-genome> -o pangenie -j 24 -t 24
+PanGenie -i <input-reads> -v {results}/vcf/{callsetname}/{callsetname}_filtered_ids.vcf -r <reference-genome> -o pangenie -j 24 -t 24
 
 ```
 
@@ -60,7 +60,7 @@ VCFs produced by this pipeline contain special annotations in the INFO field ("I
 
 ``` bat
 
-cat pangenie_genotyping.vcf | python3 convert-to-biallelic.py {callsetname}_filtered_ids_biallelic.vcf > pangenie_genotyping_biallelic.vcf
+cat pangenie_genotyping.vcf | python3 convert-to-biallelic.py {results}/vcf/{callsetname}/{callsetname}_filtered_ids_biallelic.vcf > pangenie_genotyping_biallelic.vcf
 
 ```
 
