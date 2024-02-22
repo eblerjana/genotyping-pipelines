@@ -12,6 +12,9 @@ Provide paths to the input data in the ``config/config.yaml``:
 
 ``` bat
 
+# name of the output folder to write all results to
+results: "result"
+
 # callsets to consider. vcf specifies the path to the VCF file, collapse specifies whether or not to collapse overlapping
 # variant alleles prior to evaluation
 
