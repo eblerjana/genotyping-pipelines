@@ -7,6 +7,14 @@ PANGENIE = config['pangenie']
 PANGENIE_MODULES = config['pangenie-modules']
 DOWNSAMPLING = config['downsampling']
 
+PANEL_SAMPLES = {}
+for callset in CALLSETS.keys():
+	for line in gzip.open(CALLSETS[callset]['multi'], 'rt'):
+		if line.startswith("#CHROM"):
+			PANEL_SAMPLES[callset] = line.strip().split()[9:]
+			break
+
+
 
 include: 'rules/leave-one-out.smk'
 include: 'rules/population-typing.smk'

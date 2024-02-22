@@ -7,13 +7,6 @@ for line in open(READS, 'r'):
 	fields = line.strip().split() 
 	cohort_samples.append(fields[1])
 
-panel_samples = {}
-for callset in CALLSETS.keys():
-	for line in gzip.open(CALLSETS[callset]['multi'], 'rt'):
-		if line.startswith("#CHROM"):
-			panel_samples[callset] = line.strip().split()[9:]
-			break
-
 
 rule collect_samples:
 	input:
@@ -122,7 +115,7 @@ rule genotype_concordance_variants:
 		file_prefix="{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/self_bi_all",
 		column_prefix="pangenie_self-genotyping",
 		# restrict to panel samples for which reads are available
-		samples = lambda wildcards: ','.join( list( set(panel_samples[wildcards.callset]) & set(cohort_samples) ) )
+		samples = lambda wildcards: ','.join( list( set(PANEL_SAMPLES[wildcards.callset]) & set(cohort_samples) ) )
 	conda:
 		"../envs/genotyping.yml"
 	resources:
