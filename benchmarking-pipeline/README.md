@@ -62,45 +62,7 @@ downsampling: []
 
 ```
 
-For example:
-
-```yaml
-
-callsets:
- cactus-hg38:
-   multi: "cactus_filtered_ids.vcf.gz"
-   bi: "cactus_filtered_ids_biallelic.vcf.gz"
-   reference: "hg38.fa"
-   variants:
-     - snp 
-     - indels
-     - large-deletion
-     - large-insertion
-     - large-complex
-   repeat_regions: "resources/ucsc-simple-repeats.bed"
-   leave_one_out_samples:
-     - HG00438
-     - HG02717
-     - HG00733
-     - NA20129
-     - HG03453
-   
-reads: "resources/genotyping-pilot-reads.tsv"
-
-
-# PanGenie command. Example on how to specify singularity containers to be used.
-pangenie:
- pangenie.v100: "singularity exec --bind /:/hilbert pangenie-v100.sif PanGenie"
- pangenie.v201: "singularity exec --bind /:/hilbert pangenie-v210.sif PanGenie"
-
-# PanGenie command to be used for not yet released version of PanGenie (leave empty for now)
-pangenie-modules: []
-
-# Downsampling coverages for leave-one-out experiment. This example downsamples reads to 10x and 20x and runs leave-one-out experiments on these coverages in addition to the full coverage data.
-downsampling:
- - 10
- - 20
-```
+See the current config file `` config/config.yaml `` for an example.
 
 ## Required input data
 
