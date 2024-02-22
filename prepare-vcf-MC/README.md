@@ -36,7 +36,7 @@ callsets:
 
 ## Required input data
 
-**vcf**: VCF file produced by the [Minigraph-Cactus pipeline](https://github.com/ComparativeGenomicsToolkit/cactus). The VCF must be preprocessed by vcfbub (MC pipeline does this by default).    
+**vcf**: VCF file produced by the [Minigraph-Cactus pipeline](https://github.com/ComparativeGenomicsToolkit/cactus). The VCF must be preprocessed by `` vcfbub `` (MC pipeline does this by default).    
 **gfa**: corresponding GFA from which the vcf was generated
 
 ## Outputs
