@@ -38,8 +38,8 @@ rule intersect_samples:
 				outfile.write(s + '\n')
 
 
-# keep only intersection of samples (so that VCFs are comparable)
-# add AF,AN,AC tags to VCFs (to make sure all VCFs have them). HPRC variants first need to be merged with truvari
+# keep only intersection of samples (so that VCFs are comparable). Merge similar alleles with truvari.
+# add AF,AN,AC tags to VCFs (to make sure all VCFs have them).
 rule extract_intersection_samples_collapse:
 	input:
 		vcf= lambda wildcards: GENOTYPED_SETS[wildcards.source]['vcf'],
@@ -56,9 +56,9 @@ rule extract_intersection_samples_collapse:
 		runtime_min=59
 	shell:
 		"""
-		bcftools view --samples-file {input.samples} {input.vcf} | python3 workflow/scripts/extract-varianttype.py large | bgzip -c > {output.unmerged}
+		bcftools view --samples-file {input.samples} {input.vcf} |  python3 workflow/scripts/extract-varianttype.py large | bgzip -c > {output.unmerged}
 		tabix -p vcf {output.unmerged}
-		truvari collapse -r 500 -p 0.95 -P 0.95 -s 50 -S 100000 -f {input.reference} -i {output.unmerged} | bcftools sort | bcftools +fill-tags -Oz -o {output.merged} -- -t AN,AC,AF
+		truvari collapse -r 500 -p 0.95 -P 0.95 -s 50 -S 100000 -f {input.reference} -i {output.unmerged} | bcftools sort | bcftools view --min-ac 1 | bcftools +fill-tags -Oz -o {output.merged} -- -t AN,AC,AF
 		tabix -p vcf {output.merged}
 		"""
 
@@ -81,7 +81,7 @@ rule extract_intersection_samples:
 		runtime_min=59
 	shell:
 		"""
-		bcftools view --samples-file {input.samples} {input.vcf} | python3 workflow/scripts/extract-varianttype.py large | bcftools +fill-tags -Oz -o {output} -- -t AN,AC,AF
+		bcftools view --samples-file {input.samples} {input.vcf} | python3 workflow/scripts/extract-varianttype.py large | bcftools view --min-ac 1 | bcftools +fill-tags -Oz -o {output} -- -t AN,AC,AF
 		tabix -p vcf {output}
 		"""
 

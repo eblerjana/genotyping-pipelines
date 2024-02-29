@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import argparse
 import pandas as pd
 import seaborn as sns
 from matplotlib.backends.backend_pdf import PdfPages
@@ -22,9 +23,16 @@ from sklearn.impute import IterativeImputer
 
 
 if __name__ == "__main__":
-	filename = sys.argv[1]
-	outname = sys.argv[2]
-	threshold = int(sys.argv[3])
+	parser = argparse.ArgumentParser(prog='analysis.py', description=__doc__)
+	parser.add_argument('-t', '--table', required=True, help="Table with all statistics.")
+	parser.add_argument('-o', '--outname', required=True, help="Name of output file.")
+	parser.add_argument('-n', '--number', type=int, required=True, help="Threshold for number of high quality calls per variant.")
+	parser.add_argument('-r', '--regions', nargs='+', default=[], help="Names of regions to be plotted (must be part of table).")
+	args = parser.parse_args()
+
+	filename = args.table
+	outname = args.outname
+	threshold = args.number
 #	med_svs = sys.stgv[3]
 
 	df = pd.read_csv(filename, sep='\t')
@@ -105,10 +113,10 @@ if __name__ == "__main__":
 	# only consider non-empty sets of variants for analysis
 	for name, variants in zip(['snps', 'indels'], [snps, indels]):
 		if variants:
-			variant_types[name] = [variants, ['unfiltered', 'strict'], ['all-regions', 'repeat-regions', 'nonrepeat-regions']]
+			variant_types[name] = [variants, ['unfiltered', 'strict'], ['all-regions'] + args.regions]
 	for name, variants in zip(['large_deletions', 'large_insertions', 'large_complex'], [large_deletions, large_insertions, large_complex]):
 		if variants:
-			variant_types[name] = [variants, ['unfiltered', 'lenient_-0.5', 'strict'], ['all-regions', 'repeat-regions', 'nonrepeat-regions']]
+			variant_types[name] = [variants, ['unfiltered', 'lenient_-0.5', 'strict'], ['all-regions'] + args.regions]
 	print('Considering variant classes: ' + ','.join([v for v in variant_types.keys()]))	
 
 
@@ -155,10 +163,8 @@ if __name__ == "__main__":
 				# collect all variants in the region
 				if region == "all-regions":
 					ids_region = variant
-				elif region == "repeat-regions":
-					ids_region = set(id for id in df[df["repeats_overlaps"]>=0.5].variant_id if id in variant)
-				elif region == "nonrepeat-regions":
-					ids_region = set(id for id in df[df["repeats_overlaps"]<0.5].variant_id if id in variant)
+				else:
+					ids_region = set(id for id in df[df[region + "_overlaps"]>=0.5].variant_id if id in variant)
 
 				# create plots
 				with PdfPages(outname + '_' + name + '_' + filter + '_' + region + '.pdf') as pdf:
