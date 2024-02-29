@@ -148,9 +148,9 @@ rule variant_id_to_bubble:
 rule annotate_variants:
 	input:
 		vcf = lambda wildcards: CALLSETS[wildcards.callset]['bi'],
-		bed = lambda wildcards: CALLSETS[wildcards.callset]['repeat_regions']
+		bed = lambda wildcards: CALLSETS[wildcards.callset]["regions"][wildcards.regions]
 	output:
-		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/annotations_bi_all.tsv"
+		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/annotations_bi_all_{regions}.tsv"
 	conda:
 		"../envs/genotyping.yml"
 	resources:
@@ -158,7 +158,7 @@ rule annotate_variants:
 		runtime_hrs=1,
 		runtime_min=59
 	shell:
-		"bedtools annotate -i {input.vcf} -files {input.bed} | python3 workflow/scripts/annotate_repeats.py -names repeats -format tsv > {output}"
+		"bedtools annotate -i {input.vcf} -files {input.bed} | python3 workflow/scripts/annotate_repeats.py -names {wildcards.regions} -format tsv > {output}"
 
 
 #################################################
@@ -172,7 +172,7 @@ rule merge_table:
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/mendelian-statistics_bi_all.tsv",
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/self_bi_all_variant-stats.tsv",
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/bubble-statistics_bi_all.tsv",
-		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/annotations_bi_all.tsv"
+		lambda wildcards: expand("{{results}}/population-typing/{{callset}}/{{version}}/{{coverage}}/evaluation/statistics/all/annotations_bi_all_{regions}.tsv", regions=CALLSETS[wildcards.callset]["regions"].keys())
 	output:
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/summary_bi_all.tsv"
 	conda:
@@ -192,7 +192,8 @@ rule plot_statistics:
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv"
 	params:
 		outprefix="{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all",
-		threshold= 10 if len(cohort_samples) < 1000 else 50
+		threshold= 10 if len(cohort_samples) < 1000 else 50,
+		regions = lambda wildcards: "-r " + " ".join(CALLSETS[wildcards.callset]["regions"].keys()) if CALLSETS[wildcards.callset]["regions"] else ""
 	log:
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all.log"
 	conda:
@@ -202,7 +203,7 @@ rule plot_statistics:
 		runtime_hrs=8,
 		runtime_min=59
 	shell:
-		"python3 workflow/scripts/analysis.py {input} {params.outprefix} {params.threshold} &> {log}"
+		"python3 workflow/scripts/analysis.py -t {input} -o {params.outprefix} -n {params.threshold} {params.regions} &> {log}"
 
 
 

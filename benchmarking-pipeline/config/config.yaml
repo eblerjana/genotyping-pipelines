@@ -14,7 +14,6 @@ callsets:
      - large-deletion
      - large-insertion
      - large-complex
-  repeat_regions: "resources/chm13v2.0_RepeatMasker_4.1.2p1.2022Apr14.bed"
   leave_one_out_samples:
     - HG00438
     - HG00621
@@ -57,6 +56,8 @@ callsets:
     - NA18906
     - NA20129
     - NA21309
+  regions:
+    repeats: "resources/chm13v2.0_RepeatMasker_4.1.2p1.2022Apr14.bed"
 
 # read data. File required that specifies a sample name, path to FASTA/FASTQ data and superpopulation:
 # FamilyID	SampleID	FatherID	MotherID	Population	Superpopulation	Sample_Illumina

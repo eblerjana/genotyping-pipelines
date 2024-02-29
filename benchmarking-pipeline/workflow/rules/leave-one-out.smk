@@ -285,6 +285,8 @@ def region_to_bed(wildcards):
 		return "{results}/leave-one-out/{callset}/biallelic-bubbles.bed".format(results=wildcards.results, callset=wildcards.callset)
 	if wildcards.regions == "multiallelic":
 		return "{results}/leave-one-out/{callset}/complex-bubbles.bed".format(results=wildcards.results, callset=wildcards.callset)
+	if wildcards.regions in CALLSETS[wildcards.callset]["regions"]:
+		return CALLSETS[wildcards.callset]["regions"][wildcards.regions]
 	assert(False)
 
 
@@ -304,8 +306,8 @@ rule vcfeval:
 	priority: 1
 	wildcard_constraints:
 		sample = "|".join([s for s in reads_leave_one_out.keys()]),
-		regions = "biallelic|multiallelic",
-		vartype = "|".join(allowed_variants)
+		vartype = "|".join(allowed_variants),
+		coverage = "|".join(coverages_leave_one_out)
 	params:
 		tmp = "{results}/leave-one-out/{callset}/{version}/{sample}/{coverage}/precision-recall-typable/{regions}_{vartype}_tmp",
 		outname = "{results}/leave-one-out/{callset}/{version}/{sample}/{coverage}/precision-recall-typable/{regions}_{vartype}",
@@ -335,7 +337,6 @@ rule collect_typed_variants:
 		"../envs/genotyping.yml"
 	wildcard_constraints:
 		sample = "|".join([s for s in reads_leave_one_out.keys()]),
-		regions = "biallelic|multiallelic",
 		vartype = "|".join(allowed_variants)
 	resources:
 		mem_total_mb=50000
@@ -361,8 +362,8 @@ rule genotype_concordances:
 		"../envs/genotyping.yml"
 	wildcard_constraints:
 		sample = "|".join([s for s in reads_leave_one_out.keys()]),
-		regions = "biallelic|multiallelic",
-		vartype = "|".join(allowed_variants)
+		vartype = "|".join(allowed_variants),
+		coverage = "|".join(coverages_leave_one_out)
 	log:
 		"{results}/leave-one-out/{callset}/{version}/{sample}/{coverage}/concordance/{regions}_{vartype}/summary.log"
 	resources:
@@ -407,7 +408,7 @@ rule plotting_versions:
 		"{results}/leave-one-out/{callset}/plots/comparison-versions/{metric}/{metric}_{coverage}_{regions}.pdf"
 	wildcard_constraints:
 		metric="concordance|precision-recall-typable|untyped",
-		regions="biallelic|multiallelic"
+		coverage = "|".join(coverages_leave_one_out)
 	priority: 1
 	conda:
 		"../envs/genotyping.yml"
@@ -425,7 +426,7 @@ rule plotting_versions_conc_vs_untyped:
 	output:
 		"{results}/leave-one-out/{callset}/plots/comparison-versions/concordance-vs-untyped/concordance-vs-untyped_{coverage}_{regions}.pdf"
 	wildcard_constraints:
-		regions="biallelic|multiallelic"
+		coverage = "|".join(coverages_leave_one_out)
 	priority: 1
 	conda:
 		"../envs/genotyping.yml"
@@ -443,8 +444,7 @@ rule plotting_coverages:
 	output:
 		"{results}/leave-one-out/{callset}/plots/comparison-coverages/{metric}/{metric}_{version}_{regions}.pdf"
 	wildcard_constraints:
-		metric="concordance|precision-recall-typable|untyped",
-		regions="biallelic|multiallelic"
+		metric="concordance|precision-recall-typable|untyped"
 	priority: 1
 	conda:
 		"../envs/genotyping.yml"

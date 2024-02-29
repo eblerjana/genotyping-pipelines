@@ -1,3 +1,4 @@
+import gzip
 configfile: 'config/config.yaml'
 
 
@@ -24,13 +25,19 @@ coverages = ['full'] + config['downsampling']
 versions_to_run = [v for v in config['pangenie'].keys()] + [v for v in config['pangenie-modules'].keys()]
 
 
+def leave_one_out_plots(wildcards):
+	plots = []
+	for callset in CALLSETS.keys():
+		plots.extend( expand("{results}/leave-one-out/{callset}/plots/comparison-versions/{metric}/{metric}_{coverage}_{regions}.pdf", results=RESULTS_BENCH, callset=callset, metric=['concordance', 'precision-recall-typable', 'untyped', 'concordance-vs-untyped'], coverage=coverages, regions=['biallelic', 'multiallelic'] + [r for r in CALLSETS[callset]["regions"].keys()]))
+		plots.extend( expand("{results}/leave-one-out/{callset}/plots/comparison-coverages/{metric}/{metric}_{version}_{regions}.pdf", results=RESULTS_BENCH, callset=callset, metric=['concordance', 'precision-recall-typable', 'untyped'], version = versions_to_run, regions = ['biallelic', 'multiallelic'] + [r for r in CALLSETS[callset]["regions"].keys()]))
+	return plots
+
 
 
 
 rule all:
 	input:
-		expand("{results}/leave-one-out/{callset}/plots/comparison-versions/{metric}/{metric}_{coverage}_{regions}.pdf", results = config['results'], callset = [c for c in config['callsets'].keys()], metric = ['concordance', 'precision-recall-typable', 'untyped', 'concordance-vs-untyped'], coverage = coverages, regions = ['biallelic', 'multiallelic']),
-		expand("{results}/leave-one-out/{callset}/plots/comparison-coverages/{metric}/{metric}_{version}_{regions}.pdf", results = config['results'], callset = [c for c in config['callsets'].keys()], metric = ['concordance', 'precision-recall-typable', 'untyped'], version = versions_to_run, regions = ['biallelic', 'multiallelic']),
+		leave_one_out_plots,
 		expand("{results}/leave-one-out/{callset}/plots/resources/resources_{callset}-{coverage}.pdf", results = config['results'], callset = [c for c in config['callsets'].keys()], coverage = coverages),
 
 		expand("{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.vcf.gz", results = config['results'], callset = [c for c in config['callsets'].keys()], what = ['bi'], version = versions_to_run, coverage = coverages),
@@ -40,8 +47,7 @@ rule all:
 
 rule leave_one_out:
 	input:
-		expand("{results}/leave-one-out/{callset}/plots/comparison-versions/{metric}/{metric}_{coverage}_{regions}.pdf", results = config['results'], callset = [c for c in config['callsets'].keys()], metric = ['concordance', 'precision-recall-typable', 'untyped', 'concordance-vs-untyped'], coverage = coverages, regions = ['biallelic', 'multiallelic']),
-		expand("{results}/leave-one-out/{callset}/plots/comparison-coverages/{metric}/{metric}_{version}_{regions}.pdf", results = config['results'], callset = [c for c in config['callsets'].keys()], metric = ['concordance', 'precision-recall-typable', 'untyped'], version = versions_to_run, regions = ['biallelic', 'multiallelic']),
+		leave_one_out_plots,
 		expand("{results}/leave-one-out/{callset}/plots/resources/resources_{callset}-{coverage}.pdf", results = config['results'], callset = [c for c in config['callsets'].keys()], coverage = coverages),
 
 
