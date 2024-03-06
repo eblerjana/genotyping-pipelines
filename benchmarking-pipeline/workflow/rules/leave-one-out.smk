@@ -400,6 +400,27 @@ rule collect_results:
 
 
 
+# plot results across different regions for a version
+rule plotting_regions:
+	input:
+		lambda wildcards: expand("{{results}}/leave-one-out/{{callset}}/{{version}}/plots/{{coverage}}/{m}_{{callset}}-{{version}}-{{coverage}}_{regions}_{vartype}.tsv", m = wildcards.metric if wildcards.metric != 'untyped' else 'concordance', regions=['biallelic', 'multiallelic'] + [r for r in CALLSETS[wildcards.callset]["regions"].keys()], vartype=CALLSETS[wildcards.callset]['variants'])
+	output:
+		"{results}/leave-one-out/{callset}/plots/comparison-regions/{metric}/{metric}_{coverage}_{version}.pdf"
+	wildcard_constraints:
+		metric="concordance|precision-recall-typable|untyped",
+		coverage = "|".join(coverages_leave_one_out)
+	priority: 1
+	conda:
+		"../envs/genotyping.yml"
+	params:
+		sources = lambda wildcards: ' '.join([wildcards.callset + '-' + wildcards.version + '-' + wildcards.coverage + '_' + r for r in ['biallelic', 'multiallelic'] + [r for r in CALLSETS[wildcards.callset]["regions"].keys()]])
+	shell:
+		"python3 workflow/scripts/plot-results.py -files {input} -outname {output} -sources {params.sources} -metric {wildcards.metric}"
+
+
+
+
+
 # plot results of different subsampling runs
 rule plotting_versions:
 	input:

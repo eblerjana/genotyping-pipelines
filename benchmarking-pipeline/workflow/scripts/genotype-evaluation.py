@@ -121,12 +121,27 @@ total_absent = sum(matrix[0][0:3])
 total_het = sum(matrix[1][0:3])
 total_hom = sum(matrix[2][0:3])
 
+
 conc_absent = correct_absent / float(total_absent) if total_absent > 0 else 0.0
 conc_het = correct_het / float(total_het) if total_het > 0 else 0.0
 conc_hom = correct_hom / float(total_hom) if total_hom > 0 else 0.0
-balanced_concordance = (conc_absent + conc_het + conc_hom) / 3.0
+
+balanced_concordance = 0.0
+denom = 0.0
+if float(total_absent) > 0:
+	balanced_concordance += conc_absent
+	denom += 1
+if float(total_het) > 0:
+	balanced_concordance += conc_het
+	denom += 1
+if float(total_hom) > 0:
+	balanced_concordance += conc_hom
+	denom += 1
+
+balanced_concordance = balanced_concordance / denom
 overall_concordance = (correct_absent + correct_het + correct_hom) / (total_absent + total_het + total_hom) if (total_absent + total_het + total_hom) > 0 else 0.0
 typed_all = 1.0 - (untyped / float(all)) if float(all) > 0 else 0.0
+
 
 ## vcfeval like stats for comparison
 true_positives = correct_hom + correct_het

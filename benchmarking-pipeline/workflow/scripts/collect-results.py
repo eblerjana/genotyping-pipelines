@@ -26,6 +26,10 @@ def parse_precision_recall(filename):
 			precision = float(fields[5])
 			recall = float(fields[6])
 			fscore = float(fields[7])
+		if line.startswith('0 total baseline variants'):
+			precision = 0.0
+			recall = 0.0
+			fscore = 0.0
 	assert precision is not None
 	assert recall is not None
 	assert fscore is not None

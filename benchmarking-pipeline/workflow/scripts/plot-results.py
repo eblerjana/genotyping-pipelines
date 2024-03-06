@@ -18,7 +18,7 @@ def plot_concordances_all(files, outname, sources):
 	type_to_file = {}
 	n_rows = 1
 	n_cols = 5
-	plt.figure(figsize=(50,5))
+	plt.figure(figsize=(50,8))
 	for source in sources:
 		for f in files:
 			if not ('_' + source + '_') in f:
@@ -52,7 +52,7 @@ def plot_concordances_all(files, outname, sources):
 			is_first = False
 			x_values = [i*5 for i in range(len(samples))]
 			plt.plot(x_values, concordances, label=source, color=colors[i], marker='o')
-		plt.ylim(60,100)
+		plt.ylim(0.0,100)
 		plt.title(var_to_name[var])
 		plt.xticks(x_values, all_samples, rotation='vertical')
 		plt.ylabel('weighted genotype concordance [%]')
