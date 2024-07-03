@@ -54,9 +54,8 @@ callsets:
 The **multi-allelic** VCF can be used as input to PanGenie (https://github.com/eblerjana/pangenie/tree/master), e.g.:
 
 ``` bat
-
-PanGenie -i <input-reads> -v {results}/vcf/{callsetname}/{callsetname}_filtered_ids.vcf -r <reference-genome> -o pangenie -j 24 -t 24
-
+PanGenie-index -v {results}/vcf/{callsetname}/{callsetname}_filtered_ids.vcf -r <reference-genome> -t 24 -o index
+PanGenie -f index -i <input-reads> -o pangenie -j 24 -t 24
 ```
 
 VCFs produced by this pipeline contain special annotations in the INFO field ("ID"). In the multi-allelic VCF, each record defines a bubble in the pangenome graph. Each allele of a bubble is annotated by a sequence of IDs in the ID field, separated by a colon, which define variants nested inside of these bubbles. The bi-allelic VCF contains one record for each such individual ID. Both VCFs provide different representation of the same genetic variation present in the graph. After genotyping the bubbles with the command above, one can convert the bubble genotypes into genotypes for all nested variants using the script [convert-to-biallelic.py](https://bitbucket.org/jana_ebler/hprc-experiments/src/master/genotyping-experiments/workflow/scripts/convert-to-biallelic.py) and the following command:
