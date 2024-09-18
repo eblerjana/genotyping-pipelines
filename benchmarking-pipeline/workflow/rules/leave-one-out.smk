@@ -116,7 +116,6 @@ rule pangenie:
 		version = "|".join([k for k in PANGENIE.keys()] + ['^' + k for k in PANGENIE_MODULES])
 	shell:
 		"""
-		module load Singularity
 		(/usr/bin/time -v {params.pangenie} -i <(zcat {input.reads}) -v {input.vcf} -r /hilbert{input.fasta} -o {params.out_prefix} -s {wildcards.sample} -j {threads} -t {threads} -g ) &> {log}
 		"""
 
@@ -148,7 +147,6 @@ rule pangenie_modules:
 		version = "|".join([k for k in PANGENIE_MODULES.keys()] + ['^' + k for k in PANGENIE])
 	shell:
 		"""
-		module load Singularity
 		mkdir {output.index}
 		(/usr/bin/time -v {params.pangenie}-index -v {input.vcf} -r /hilbert{input.fasta} -o {params.index_prefix} -t {threads} ) &> {log.index}
 		(/usr/bin/time -v {params.pangenie} {params.pangenie_params} -f {params.index_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log.genotype}
@@ -200,7 +198,7 @@ rule convert_genotypes_to_biallelic:
 		vcf = "{results}/leave-one-out/{callset}/{version}/{sample}/{coverage}/temp/pangenie-{sample}_genotyping.vcf.gz",
 		biallelic = lambda wildcards: CALLSETS[wildcards.callset]['bi']
 	output:
-		"{results}/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}_genotyping-biallelic.vcf"
+		temp("{results}/leave-one-out/{callset}/{version}/{sample}/{coverage}/pangenie-{sample}_genotyping-biallelic.vcf")
 	conda:
 		"../envs/genotyping.yml"
 	resources:

@@ -18,7 +18,7 @@ def plot_concordances_all(files, outname, sources):
 	type_to_file = {}
 	n_rows = 1
 	n_cols = 5
-	plt.figure(figsize=(50,8))
+	plt.figure(figsize=(65,5))
 	for source in sources:
 		for f in files:
 			if not ('_' + source + '_') in f:
@@ -50,7 +50,7 @@ def plot_concordances_all(files, outname, sources):
 			else:
 				assert all_samples == samples
 			is_first = False
-			x_values = [i*5 for i in range(len(samples))]
+			x_values = [i*6 for i in range(len(samples))]
 			plt.plot(x_values, concordances, label=source, color=colors[i], marker='o')
 		plt.ylim(0.0,100)
 		plt.title(var_to_name[var])
@@ -84,7 +84,7 @@ def plot_untyped_all(files, outname, sources):
 	type_to_file = {}
 	n_rows = 1
 	n_cols = 5
-	plt.figure(figsize=(50,5))
+	plt.figure(figsize=(65,5))
 	for source in sources:
 		for f in files:
 			if not ('_' + source + '_') in f:
@@ -116,7 +116,7 @@ def plot_untyped_all(files, outname, sources):
 			else:
 				assert all_samples == samples
 			is_first = False
-			x_values = [i*5 for i in range(len(samples))]
+			x_values = [i*6 for i in range(len(samples))]
 			plt.plot(x_values, untyped, label=source, color=colors[i], marker='o')
 		plt.ylim(0.0, 7.0)
 		plt.title(var_to_name[var])
@@ -150,7 +150,7 @@ def plot_fscores_all(files, outname, sources):
 	type_to_file = {}
 	n_rows = 1
 	n_cols = 5
-	plt.figure(figsize=(50,5))
+	plt.figure(figsize=(65,5))
 	for source in sources:
 		for f in files:
 			if not ('_' + source + '_') in f:
@@ -181,7 +181,7 @@ def plot_fscores_all(files, outname, sources):
 			else:
 				assert all_samples == samples
 			is_first = False
-			x_values = [i*5 for i in range(len(samples))]
+			x_values = [i*6 for i in range(len(samples))]
 			plt.plot(x_values, fscores, label=source, color=colors[i], marker='o')
 		plt.title(var_to_name[var])
 		plt.xticks(x_values, all_samples, rotation='vertical')

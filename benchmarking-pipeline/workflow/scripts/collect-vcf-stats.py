@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import argparse
-from cyvcf2 import VCF
+import gzip
 import sys
 from collections import namedtuple
 from collections import defaultdict
@@ -9,62 +9,56 @@ from collections import defaultdict
 AlleleStats = namedtuple('AlleleStats','af ac an untyped')
 GenotypeStats = namedtuple('GenotypeStats', 'heterozygosity het total')
 
-def compute_allele_statistics(record):
+def compute_allele_statistics(fields):
 	"""
 	Compute allele related statistics.
 	"""
 	an = 0
 	ac = 0
 	unknown = 0
-	for genotype in record.genotypes:
-		alleles = genotype[:-1]
-		assert 1 <= len(alleles) <= 2
-		if len(alleles) == 1:
-			# haploid genotype
-			alleles.append(alleles[0])
+	gt_index = fields[8].split(':').index('GT')
+	for genotype in fields[9:]:
+		gt = genotype.split(':')[gt_index]
+		# assuming biallelic variants
+		alleles = [gt[0], gt[-1]]
 		for a in alleles:
-			if a == -1:
+			if a == '.':
 				unknown += 1
 				continue
-			assert a in [0,1]
 			an += 1
-			ac += a
-	if an < 1:
-		assert ac < 1
+			ac += int(a)
 	af = ac / max(1.0, float(an))
-	return AlleleStats(str(af), str(ac), str(an), str(unknown))
+	return AlleleStats(str(af), str(ac), str(an), str(unknown))	
 
 
-def read_uk(record):
-	return str(record.INFO['UK'])
-
-
-def compute_genotype_statistics(record, qualities=None):
+def compute_genotype_statistics(fields, qualities=None):
 	"""
 	Compute genotype related statistics.
 	"""
 	counts = defaultdict(int)
 	het_genotypes = 0
 	total_genotypes = 0
-	gqs = record.format('GQ') if qualities is not None else [None]*len(record.genotypes)
-	for genotype, quality in zip(record.genotypes, gqs):
-		alleles = genotype[:-1]
-		assert 1 <= len(alleles) <= 2
-		if len(alleles) == 1:
-			# haploid genotype
-			alleles.append(alleles[0])
-		if not -1 in alleles:
+
+	format_field = fields[8].split(':')
+
+	gt_index = format_field.index('GT')
+	gq_index = format_field.index('GQ') if qualities else None
+
+	for genotype in fields[9:]:
+		gt = genotype.split(':')[gt_index]
+		# assuming biallelic variant
+		alleles = [gt[0], gt[-1]]
+		if not '.' in alleles:
+			quality = int(genotype.split(':')[gq_index]) if qualities else None
 			total_genotypes += 1
-			if sum(alleles) == 1:
-				assert 0 in alleles
-				assert 1 in alleles
+			if ('0' in alleles) and ('1' in alleles):
 				het_genotypes += 1
 			# read GQ
 			if qualities is not None:
 				for q in qualities:
-					if int(quality) >= q:
+					if quality >= q:
 						counts[q] += 1
-	genotype_stats = GenotypeStats( str(het_genotypes / max(1.0, float(total_genotypes))), str(het_genotypes), str(total_genotypes))
+	genotype_stats = GenotypeStats( str(het_genotypes / max(1.0,float(total_genotypes))), str(het_genotypes), str(total_genotypes))
 	return genotype_stats, counts
 
 
@@ -75,49 +69,63 @@ parser.add_argument('pangenie_all', metavar='pangenie_all', help='PanGenie biall
 args = parser.parse_args()
 
 # compute statistics for input panel VCF
-panel_reader = VCF(args.panel)
-panel_samples = panel_reader.samples
 panel_stats = {}
 
-for variant in panel_reader:
+for line in gzip.open(args.panel, 'rt'):
+	if line.startswith('#'):
+		continue
+	fields = line.strip().split()
 	# require bi-allelic vcf with IDs
-	assert len(variant.ALT) == 1
-	var_id = variant.INFO['ID']
-	allele_stats = compute_allele_statistics(variant)
+	assert len([a for a in fields[4].split(',')]) == 1
+	info_fields = {k.split('=')[0] : k.split('=')[1] for k in fields[7].split(';') if '=' in k}
+	assert 'ID' in info_fields
+	var_id = info_fields['ID']
+	allele_stats = compute_allele_statistics(fields)
 	panel_stats[var_id] = allele_stats
 
 sys.stderr.write('Done with panel.\n')
 
 
 # compute statistics for all unrelated samples
-pangenie_reader = VCF(args.pangenie)
-pangenie_samples = pangenie_reader.samples
 pangenie_stats = {}
 quals = [0,200]
 
-for variant in pangenie_reader:
-	assert len(variant.ALT) == 1
-	var_id = variant.INFO['ID']
-	allele_stats = compute_allele_statistics(variant)
-	genotype_stats, counts = compute_genotype_statistics(variant, quals)
-	uk = read_uk(variant)
+for line in gzip.open(args.pangenie, 'rt'):
+	if line.startswith('#'):
+		continue
+	fields = line.strip().split()
+	# require bi-allelic vcf with IDs
+	assert len([a for a in fields[4].split(',')]) == 1
+	info_fields = {k.split('=')[0] : k.split('=')[1] for k in fields[7].split(';') if '=' in k}
+	assert 'ID' in info_fields
+	var_id = info_fields['ID']
+	allele_stats = compute_allele_statistics(fields)
+	genotype_stats, counts = compute_genotype_statistics(fields, quals)
+	assert 'UK' in info_fields
+	uk = info_fields['UK']
 	pangenie_stats[var_id] = [allele_stats, genotype_stats, uk, counts]
 
 sys.stderr.write('Done with unrelated.\n')
 
 # compute statistics for all samples (unrelated + related)
-pangenie_all_reader = VCF(args.pangenie_all)
-pangenie_all_samples = pangenie_all_reader.samples
 pangenie_all_stats = {}
 
-for variant in pangenie_all_reader:
-	assert len(variant.ALT) == 1
-	var_id = variant.INFO['ID']
-	allele_stats = compute_allele_statistics(variant)
-	genotype_stats, counts = compute_genotype_statistics(variant, quals)
-	uk = read_uk(variant)
+for line in gzip.open(args.pangenie_all, 'rt'):
+	if line.startswith('#'):
+		continue
+	fields = line.strip().split()
+	# require bi-allelic vcf with IDs
+	assert len([a for a in fields[4].split(',')]) == 1
+	info_fields = {k.split('=')[0] : k.split('=')[1] for k in fields[7].split(';') if '=' in k}
+	assert 'ID' in info_fields
+	var_id = info_fields['ID']
+	allele_stats = compute_allele_statistics(fields)
+	genotype_stats, counts = compute_genotype_statistics(fields, quals)
+	assert 'UK' in info_fields
+	uk = info_fields['UK']
 	pangenie_all_stats[var_id] = [allele_stats, genotype_stats, uk, counts]
 
+sys.stderr.write('Done with all.\n')
 
 # print stats for all IDs in genotypes VCF
 header = [ 	'variant_id',

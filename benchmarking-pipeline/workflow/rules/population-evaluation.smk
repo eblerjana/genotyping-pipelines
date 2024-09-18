@@ -92,7 +92,7 @@ rule compute_statistics:
 		'../envs/genotyping.yml'
 	resources:
 		mem_total_mb=200000,
-		runtime_hrs=96,
+		runtime_hrs=160,
 		runtime_min=59
 	shell:
 		"python3 workflow/scripts/collect-vcf-stats.py {input.panel} {input.vcf} {input.vcf_all} > {output}"
@@ -155,7 +155,7 @@ rule annotate_variants:
 		"../envs/genotyping.yml"
 	resources:
 		mem_total_mb=200000,
-		runtime_hrs=1,
+		runtime_hrs=14,
 		runtime_min=59
 	shell:
 		"bedtools annotate -i {input.vcf} -files {input.bed} | python3 workflow/scripts/annotate_repeats.py -names {wildcards.regions} -format tsv > {output}"
@@ -172,38 +172,59 @@ rule merge_table:
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/mendelian-statistics_bi_all.tsv",
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/self_bi_all_variant-stats.tsv",
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/bubble-statistics_bi_all.tsv",
-		lambda wildcards: expand("{{results}}/population-typing/{{callset}}/{{version}}/{{coverage}}/evaluation/statistics/all/annotations_bi_all_{regions}.tsv", regions=CALLSETS[wildcards.callset]["regions"].keys())
+#		lambda wildcards: expand("{{results}}/population-typing/{{callset}}/{{version}}/{{coverage}}/evaluation/statistics/all/annotations_bi_all_{regions}.tsv", regions=CALLSETS[wildcards.callset]["regions"].keys())
 	output:
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/summary_bi_all.tsv"
 	conda:
 		"../envs/plotting.yml"
 	resources:
-		mem_total_mb=80000,
+		mem_total_mb=150000,
 		runtime_hrs=5,
 		runtime_min=1
 	shell:
 		"python3 workflow/scripts/merge-tables.py {input} {output}"
 
 
-rule plot_statistics:
+rule perform_regression:
 	input:
 		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/all/summary_bi_all.tsv"
 	output:
-		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv"
+		filters = "{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv",
+		regression = "{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_regression.tsv"
 	params:
 		outprefix="{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all",
 		threshold= 10 if len(cohort_samples) < 1000 else 50,
-		regions = lambda wildcards: "-r " + " ".join(CALLSETS[wildcards.callset]["regions"].keys()) if CALLSETS[wildcards.callset]["regions"] else ""
+#		regions = lambda wildcards: "-r " + " ".join(CALLSETS[wildcards.callset]["regions"].keys()) if CALLSETS[wildcards.callset]["regions"] else ""
 	log:
-		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all.log"
+		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_regression.log"
 	conda:
 		'../envs/plotting.yml'
 	resources:
 		mem_total_mb=200000,
-		runtime_hrs=8,
+		runtime_hrs=15,
 		runtime_min=59
 	shell:
-		"python3 workflow/scripts/analysis.py -t {input} -o {params.outprefix} -n {params.threshold} {params.regions} &> {log}"
+		"python3 workflow/scripts/analysis-stepwise.py -t {input} -o {params.outprefix} -n {params.threshold} --regression-only &> {log}"
+
+
+rule plot_statistics:
+	input:
+		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_regression.tsv"
+	output:
+		"{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_plot.log"
+	params:
+		outprefix="{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all",
+		threshold= 10 if len(cohort_samples) < 1000 else 50,
+#		regions = lambda wildcards: "-r " + " ".join(CALLSETS[wildcards.callset]["regions"].keys()) if CALLSETS[wildcards.callset]["regions"] else ""
+	conda:
+		'../envs/plotting.yml'
+	resources:
+		mem_total_mb=200000,
+		runtime_hrs=15,
+		runtime_min=59
+	shell:
+		"python3 workflow/scripts/analysis-stepwise.py -t {input} -o {params.outprefix} -n {params.threshold} --plot-only &> {output}"
+
 
 
 
@@ -217,9 +238,11 @@ rule plot_statistics:
 rule filtered_callsets:
 	input:
 		vcf="{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/{population}_bi_all.vcf.gz",
-		filters="{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv"
+		filters="{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv",
+		fai= lambda wildcards: CALLSETS[wildcards.callset]['reference'] + ".fai"
 	output:
-		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/filtered/{population}_bi_all_{filter}.vcf.gz"
+		tmp = temp("{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/filtered/tmp-{population}_bi_all_{filter}.vcf.gz"),
+		vcf = "{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/filtered/{population}_bi_all_{filter}.vcf.gz"
 	resources:
 		mem_total_mb=20000,
 		runtime_hrs=10,
@@ -227,5 +250,11 @@ rule filtered_callsets:
 	wildcard_constraints:
 		filter="unfiltered|lenient|strict",
 		population="all-samples|unrelated-samples"
+	conda:
+		"../envs/genotyping.yml"
 	shell:
-		"zcat {input.vcf} | python3 workflow/scripts/select_ids.py {input.filters} {wildcards.filter} | bgzip -c > {output}"
+		"""
+		zcat {input.vcf} | python3 workflow/scripts/select_ids.py {input.filters} {wildcards.filter} | bgzip -c > {output.tmp} 
+		bcftools reheader --fai {input.fai} {output.tmp} > {output.vcf}
+		tabix -p vcf {output.vcf}
+		"""

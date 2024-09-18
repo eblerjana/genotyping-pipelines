@@ -63,3 +63,4 @@ if __name__== "__main__":
 		produce_tsv(args.names)
 	else:
 		produce_vcf(args.names, args.vcf)
+

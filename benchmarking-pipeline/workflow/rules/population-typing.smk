@@ -81,11 +81,9 @@ rule genotyping:
 		pangenie = lambda wildcards: PANGENIE[wildcards.version]
 	benchmark:
 		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_benchmark.txt"
-	priority: 1
 	shell:
 		"""
 		gunzip -c {input.reads} > {output.reads}
-		module load Singularity
 		(/usr/bin/time -v {params.pangenie} -i {output.reads} -v {input.panel} -r /hilbert{input.reference} -o {params.out_prefix} -s {wildcards.sample} -j {threads} -t {threads} -g ) &> {log}
 		"""
 
@@ -111,10 +109,8 @@ rule genotyping_index:
 		pangenie = lambda wildcards: PANGENIE_MODULES[wildcards.version].split('PanGenie')[0] + "PanGenie"
 	benchmark:
 		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/indexing/indexing_benchmark.txt"
-	priority: 1
 	shell:
 		"""
-		module load Singularity
 		(/usr/bin/time -v {params.pangenie}-index -v {input.panel} -r /hilbert{input.reference} -o {params.out_prefix} -t {threads} ) &> {log}
 		"""
 
@@ -132,7 +128,7 @@ rule genotyping_genotype:
 		 version = "|".join([k for k in PANGENIE_MODULES.keys()] + ['^' + k for k in PANGENIE])
 	threads: 24
 	resources:
-		mem_total_mb = 90000,
+		mem_total_mb = 75000,
 		runtime_hrs = 5,
 		runtime_min = 1
 	params:
@@ -142,10 +138,8 @@ rule genotyping_genotype:
 		pangenie_params = lambda wildcards: PANGENIE_MODULES[wildcards.version].split('PanGenie')[-1]
 	benchmark:
 		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/pangenie-{sample}_benchmark.txt"
-	priority: 1
 	shell:
 		"""
-		module load Singularity
 		(/usr/bin/time -v {params.pangenie} {params.pangenie_params} -f {params.in_prefix} -i <(gunzip -c {input.reads}) -o {params.out_prefix} -j {threads} -t {threads} -s {wildcards.sample} ) &> {log}
 		"""
 
@@ -164,11 +158,12 @@ rule postprocess_multi:
 	resources:
 		mem_total_mb=10000,
 		runtime_hrs=0,
-		runtime_min=20
+		runtime_min=50
 	conda:
 		"../envs/genotyping.yml"
 	benchmark:
 		"{results}/population-typing/{callset}/{version}/{coverage}/genotyping/{sample}_genotyping_postprocess_benchmark.txt"
+	priority: 1
 	shell:
 		"(/usr/bin/time -v sh workflow/scripts/postprocess-multi.sh {input} {output} ) &> {log}"
 
@@ -252,14 +247,14 @@ rule merge_vcfs_by_region_bi:
 	log:
 		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_bi_all_{region}.log"
 	resources:
-		mem_total_mb = 100000,
+		mem_total_mb = 500000,
 #		mem_total_mb = 1000000,
 #		runtime_hrs = 7,
 		runtime_hrs = 2,
 		runtime_min = 59
 	wildcard_constraints:
 		region = "chr[0-9A-Z]+:[0-9]+-[0-9]+"
-	threads: 10
+	threads: 12
 	benchmark:
 		"{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/region-wise/pangenie_merged_bi_all_{region}_benchmark.txt"
 	conda:
@@ -341,5 +336,6 @@ rule create_biallelic_vcf:
 		runtime_min=59
 	conda:
 		"../envs/genotyping.yml"
+	priority: 1
 	shell:
 		"(/usr/bin/time -v sh workflow/scripts/postprocess-bi.sh {input.template} {input.vcf} {output.vcf_bi_all}) &> {log}"
