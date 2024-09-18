@@ -44,7 +44,8 @@ rule extract_intersection_samples_collapse:
 	input:
 		vcf= lambda wildcards: GENOTYPED_SETS[wildcards.source]['vcf'],
 		samples = "{results}/samples-intersection.tsv",
-		reference = lambda wildcards: GENOTYPED_SETS[wildcards.source]['reference']
+		reference = lambda wildcards: GENOTYPED_SETS[wildcards.source]['reference'],
+		fai = lambda wildcards: GENOTYPED_SETS[wildcards.source]['reference'] + ".fai"
 	output:
 		unmerged=temp("{results}/{source}/vcfs/tmp-{source}_intersection_full-unmerged.vcf.gz"),
 		merged="{results}/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz"
@@ -54,9 +55,10 @@ rule extract_intersection_samples_collapse:
 		mem_total_mb=80000,
 		runtime_hrs=23,
 		runtime_min=59
+	threads: 10
 	shell:
 		"""
-		bcftools view --samples-file {input.samples} {input.vcf} |  python3 workflow/scripts/extract-varianttype.py large | bgzip -c > {output.unmerged}
+		bcftools view --threads {threads} --samples-file {input.samples} {input.vcf} | bcftools reheader --fai {input.fai} | python3 workflow/scripts/extract-varianttype.py large | bgzip -c > {output.unmerged}
 		tabix -p vcf {output.unmerged}
 		truvari collapse -r 500 -p 0.95 -P 0.95 -s 50 -S 100000 -f {input.reference} -i {output.unmerged} | bcftools sort | bcftools view --min-ac 1 | bcftools +fill-tags -Oz -o {output.merged} -- -t AN,AC,AF
 		tabix -p vcf {output.merged}
@@ -115,17 +117,39 @@ rule plot_sv_counts_filtered:
 		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz", source = [s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
 		populations = POPULATIONS
 	output:
-		"{results}/sv-count-comparison.pdf"
+		"{results}/sv-count-comparison_all.pdf"
 	log:
-		"{results}/sv-count-comparison.log"
+		"{results}/sv-count-comparison_all.log"
 	conda:
 		"../envs/plotting.yml"
 	params:
 		names_raw = ' '.join([s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
 		names_collapsed = ' '.join([s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
-		outname = "{results}/sv-count-comparison",
+		outname = "{results}/sv-count-comparison_all",
 	shell:
 		"python3 workflow/scripts/plot-sv-counts.py -vcfs {input.collapse} {input.raw} -names {params.names_collapsed} {params.names_raw} -o {params.outname} -pop {input.populations} &> {log}"
+
+
+
+rule plot_sv_counts_filtered_het:
+	input:
+		raw = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_raw.vcf.gz", source = [s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
+		collapse = lambda wildcards: expand("{{results}}/{source}/vcfs/{source}_intersection_full_collapsed.vcf.gz", source = [s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
+		populations = POPULATIONS
+	output:
+		"{results}/sv-count-comparison_het.pdf"
+	log:
+		"{results}/sv-count-comparison_het.log"
+	conda:
+		"../envs/plotting.yml"
+	params:
+		names_raw = ' '.join([s for s in callsets if not GENOTYPED_SETS[s]['collapse']]),
+		names_collapsed = ' '.join([s for s in callsets if GENOTYPED_SETS[s]['collapse']]),
+		outname = "{results}/sv-count-comparison_het",
+	shell:
+		"python3 workflow/scripts/plot-sv-counts.py -vcfs {input.collapse} {input.raw} -names {params.names_collapsed} {params.names_raw} -o {params.outname} -pop {input.populations} --het &> {log}"
+
+
 
 
 
