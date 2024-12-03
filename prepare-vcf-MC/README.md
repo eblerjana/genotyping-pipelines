@@ -1,6 +1,6 @@
 # Create PanGenie-ready VCF from Minigraph-Cactus VCF
 
-This pipeline was used in the HPRC paper (https://www.nature.com/articles/s41586-023-05896-x) in order to generate PanGenie-ready VCFs from the Minigraph-Cactus VCFs for human (produced based on ``vg decompose``.
+This pipeline was used in the HPRC paper (https://www.nature.com/articles/s41586-023-05896-x) in order to generate PanGenie-ready VCFs from the Minigraph-Cactus VCFs for human (produced based on ``vg decompose`` and were **not** decomposed with vcfwave).
 
 ## What the pipeline can do
 
@@ -39,8 +39,13 @@ callsets:
 
 ## Required input data
 
-**vcf**: VCF file produced by the [Minigraph-Cactus pipeline](https://github.com/ComparativeGenomicsToolkit/cactus). The VCF must be preprocessed by `` vcfbub `` (MC pipeline does this by default).    
-**gfa**: corresponding GFA from which the vcf was generated
+### VCF
+VCF file produced by the [Minigraph-Cactus pipeline](https://github.com/ComparativeGenomicsToolkit/cactus). The VCF must be preprocessed by `` vcfbub `` but **must not** be decomposed with vcfwave. Such VCFs can be produced with Minigraph-Cactus using the ``--vcf`` option. **Note:** VCFs decomposed with vcfwave (option ``--vcfwave`` in Minigraph-Cactus) are **not** compatible with this pipeline!
+
+
+### GFA
+corresponding GFA from which the vcf was generated
+
 
 ## Outputs
 
