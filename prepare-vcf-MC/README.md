@@ -44,7 +44,7 @@ VCF file produced by the [Minigraph-Cactus pipeline](https://github.com/Comparat
 
 
 ### GFA
-corresponding GFA from which the vcf was generated
+corresponding GFA (gzip compressed) from which the vcf was generated
 
 
 ## Outputs

@@ -76,7 +76,7 @@ def parse_gfa(filename, segments = None):
 	and store them.
 	"""
 	node_to_data = {}
-	with open(filename, 'r') as gfa_file:
+	with gzip.open(filename, 'rt') as gfa_file:
 		for line in gfa_file:
 			if not line[0] in ['S']:
 				# we are only interested in the segments

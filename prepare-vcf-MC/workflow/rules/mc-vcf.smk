@@ -16,9 +16,8 @@ rule correct_sex_chromosomes:
 	conda:
 		"../envs/whatshap.yml"
 	resources:
-		mem_total_mb=20000,
-		runtime_hrs=1,
-		runtime_min=59
+		mem_mb=20000,
+		walltime="01:59:00"
 	shell:
 		"""
 		python3 workflow/scripts/correct-sex-chromosomes.py {input.vcf} {input.sample_info} 2> {log} | bcftools +fill-tags -Oz -o {output} -- -t AN,AC,AF
@@ -38,9 +37,8 @@ rule filter_vcf:
 	log:
 		"{results}/vcf/{caller}/{caller}_filtered.log"
 	resources:
-		mem_total_mb=20000,
-		runtime_hrs=0,
-		runtime_min=59
+		mem_mb=20000,
+		walltime="00:59:00"
 	params:
 		reference_to_ignore = lambda wildcards: "CHM13" if CALLSETS[wildcards.caller]['reference_version'] == "GRCh38" else "GRCh38"
 	shell:
@@ -56,9 +54,8 @@ rule trim_alt_alleles:
 	conda:
 		"../envs/genotyping.yml"
 	resources:
-		mem_total_mb=20000,
-		runtime_hrs=0,
-		runtime_min=30
+		mem_mb=20000,
+		walltime="00:30:00"
 	shell:
 		"bcftools view --trim-alt-alleles {input} > {output}"
 
@@ -78,9 +75,8 @@ rule annotate_vcf:
 	conda:
 		"../envs/genotyping.yml"
 	resources:
-		mem_total_mb=200000,
-		runtime_hrs=5,
-		runtime_min=59
+		mem_mb=200000,
+		walltime="08:59:00"
 	params:
 		outname = "{results}/vcf/{caller}/{caller}_filtered_ids-tmp"
 	shell:
