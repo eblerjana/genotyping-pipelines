@@ -132,7 +132,14 @@ def detect_variants(ref_traversal, alt_traversal):
 	node_to_index = defaultdict(list)
 	for i,node in enumerate(alt_traversal):
 		node_to_index[node].append(i)
-	
+
+	# if first and last nodes don't match, keep
+	# allele and don't decompose
+	if ref_traversal[0] != alt_traversal[0]:
+		return [alt_traversal], False
+	if ref_traversal[-1] != alt_traversal[-1]:
+		return [alt_traversal], False
+
 	prev_alt_index = 0
 	prev_ref_index = 0
 	alleles = []
@@ -160,7 +167,7 @@ def detect_variants(ref_traversal, alt_traversal):
 			prev_alt_index = max(alt_index, prev_alt_index)
 			prev_ref_index = i
 	#validate(ref_traversal, alleles, alt_traversal)
-	return alleles
+	return alleles, True
 
 # TODO: this is not a proper way to evaluate!
 def validate(ref_traversal, alleles, alt_traversal):
@@ -322,19 +329,30 @@ def decompose(line, gfa):
 		id_to_alleles = {}
 		biallelic_records = []
 		seen_variants = defaultdict(str)
-		
+		vcf_alleles = fields[4].split(',')
+
 		# deconstruct alt alleles
 		for i,a in enumerate(allele_traversals[1:]):
 			alt_traversal = parse_allele_traversal(a)
-			for allele in detect_variants(ref_traversal, alt_traversal):
-				ref_allele = ref_path.get_subpath(allele[0], allele[-1])
-				add_flank = (len(allele) == 2) or (len(ref_allele) == 2)
-				# translate traversal to string based on sequence information in graph
-				alt_string = construct_allele_string(allele, gfa, add_flank)
-				# determine reference allele and its sequence/position
-				ref_string = construct_allele_string(ref_allele, gfa, add_flank)
-				# determine reference position
-				ref_pos = get_ref_position(allele[0], gfa, add_flank)
+			alleles, is_decomposed = detect_variants(ref_traversal, alt_traversal)
+			if not is_decomposed:
+				print('Could not decompose allele ' + str(i) + ' at position ' + fields[0] + ':' + fields[1])
+				assert len(alleles) == 1
+			for allele in alleles:
+				if is_decomposed:
+					ref_allele = ref_path.get_subpath(allele[0], allele[-1])
+					add_flank = (len(allele) == 2) or (len(ref_allele) == 2)
+					# translate traversal to string based on sequence information in graph
+					alt_string = construct_allele_string(allele, gfa, add_flank)
+					# determine reference allele and its sequence/position
+					ref_string = construct_allele_string(ref_allele, gfa, add_flank)
+					# determine reference position
+					ref_pos = get_ref_position(allele[0], gfa, add_flank)
+				else:
+					ref_allele = ref_traversal
+					ref_string = fields[3]
+					alt_string = vcf_alleles[i]
+					ref_pos = fields[1]
 				# trim alleles (i.e. remove common prefix/suffix)
 				ref_pos, ref_string, alt_string = trim_alleles(ref_pos, ref_string, alt_string)
 				# in case allele strings are the same, there is no variant

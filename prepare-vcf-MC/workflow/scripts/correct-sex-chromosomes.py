@@ -29,6 +29,9 @@ for line in gzip.open(args.vcf, 'rt'):
 	if fields[0] not in ['chrX', 'X', 'chrY', 'Y']:
 		continue
 	for genotype, sample in zip(fields[9:], samples):
+		if '/' in genotype:
+			# ignore unphased genotypes
+			continue
 		alleles = genotype.split('|')
 		assert len(alleles) < 3
 		for i, allele in enumerate(alleles):
@@ -78,6 +81,7 @@ for line in gzip.open(args.vcf, 'rt'):
 			else:
 				# male sample, duplicate the haplotype with most non-'.' alleles
 				assert sample_to_sex[sample] == '1'
+				assert (not '/' in genotype)
 				index =  1 if (alleles_per_haplotype_chrX[sample][0] < alleles_per_haplotype_chrX[sample][1]) else 0
 				new_alleles = [genotype.strip().split('|')[index], genotype.strip().split('|')[index]]
 				updated_genotypes.append('|'.join(new_alleles))
@@ -96,8 +100,12 @@ for line in gzip.open(args.vcf, 'rt'):
 			else:
 				# male sample, duplicate the haplotype with most non-'.' alleles
 				assert sample_to_sex[sample] == '1'
-				index =  1 if (alleles_per_haplotype_chrY[sample][0] < alleles_per_haplotype_chrY[sample][1]) else 0
-				new_alleles = [genotype.strip().split('|')[index], genotype.strip().split('|')[index]]
+				if '|' in genotype:
+					index =  1 if (alleles_per_haplotype_chrY[sample][0] < alleles_per_haplotype_chrY[sample][1]) else 0
+				else:
+					assert '/' in genotype
+					index = 0 if genotype.split('/')[0] != '.' else 1
+				new_alleles = [genotype.strip().replace('/', '|').split('|')[index], genotype.strip().replace('/', '|').split('|')[index]]
 				updated_genotypes.append('|'.join(new_alleles))
 		fields = fields[:9] + updated_genotypes
 		print('\t'.join(fields))

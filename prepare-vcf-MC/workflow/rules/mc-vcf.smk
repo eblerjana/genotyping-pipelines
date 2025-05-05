@@ -38,7 +38,7 @@ rule filter_vcf:
 		"{results}/vcf/{caller}/{caller}_filtered.log"
 	resources:
 		mem_mb=20000,
-		walltime="00:59:00"
+		walltime="01:59:00"
 	params:
 		reference_to_ignore = lambda wildcards: "CHM13" if CALLSETS[wildcards.caller]['reference_version'] == "GRCh38" else "GRCh38"
 	shell:

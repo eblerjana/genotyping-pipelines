@@ -33,9 +33,7 @@ for line in sys.stdin:
 		print(line[:-1])
 		continue
 	if line.startswith('#'):
-		# rename chm13 to CHM13
-		fixed = ['CHM13' if i == 'chm13' else i for i in fields]
-		print('\t'.join(fixed).strip())
+		print('\t'.join(fields).strip())
 		# keep samples
 		samples = fields[9:]
 		continue
@@ -53,7 +51,7 @@ for line in sys.stdin:
 	no_n = not 'N' in fields[3] and not 'N' in fields[4]
 	no_missing_alt = all(c in 'CAGTcagt,' for c in fields[4])
 
-	# for diploid samples (all except CHM13), replace "." genotype by ".|."
+	# replace "." genotype by ".|."
 	for i in range(len(fields[9:])):
 		if (fields[i+9] == '.'):
 			fields[i+9] = '.|.'
@@ -93,4 +91,3 @@ sys.stderr.write('number of variants not containing missing ALTs: ' + str(total_
 sys.stderr.write('number of alleles not containing missing ALTs: ' + str(total_missing_alt_alleles) + '\n')
 sys.stderr.write('total number of variants in output (AN>=' + str(min_an) + ', on chromosomes): ' + str(total_filtered)  + '\n')
 sys.stderr.write('total number of alleles in output: ' + str(total_filtered_alleles)  + '\n')
-
