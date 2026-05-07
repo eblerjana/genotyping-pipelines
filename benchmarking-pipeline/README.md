@@ -5,9 +5,7 @@ This pipeline can be used to perform different genotyping experiments with PanGe
 
 ## What the pipeline can do
 
-**leave-one-out experiment**: PanGenie's genotyping performance is evaluated by removing one of the panel samples from the input VCF, and then genotyping it using a panel containing the remaining n-1 samples only. PanGenie predicts a genotype for each input variant. The resulting VCF is converted into the biallelic VCF representation, based on the annotations that it contains in the INFO field. This results in a genotyped version of the variants in the biallelic VCF. The genotypes are next compared to the ground truth genotypes of the left out sample using the weighted genotype concordance as a metric.
-
-**population-typing**: PanGenie is run on a large set of samples (e.g. the 1000 Genomes samples). The multiallelic VCF is used as input for PanGenie, producing genotype predictions for all variants it contains. Genotyped VCFs are again converted to the biallelic VCF representation, based on the annotations in the multiallelic VCF, producing genotypes for all alleles contained in the biallelic VCF. Results are then evaluated based on trio information and different statistics, and a positive set (=strict) as well as a filtered set (=lenient) are computed containing subsets of variants genotyped with high quality.
+PanGenie's genotyping performance is evaluated by removing one of the panel samples from the input VCF, and then genotyping it using a panel containing the remaining n-1 samples only. PanGenie predicts a genotype for each input variant. The resulting VCF is converted into the biallelic VCF representation, based on the annotations that it contains in the INFO field. This results in a genotyped version of the variants in the biallelic VCF. The genotypes are next compared to the ground truth genotypes of the left out sample using the weighted genotype concordance as a metric.
 
 
 ## How to set up
@@ -48,13 +46,13 @@ callsetname:
 reads: "reads.tsv"
 
 
-# PanGenie command. Different versions can be run by listing several commandlines.
+# PanGenie commands to be used for all versions < v3.0.0
 pangenie:
  pangenie.v100.subsample14: "singularity exec --bind /:/hilbert container-main.sif PanGenie"
  pangenie.v201.subsample5: "singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v2.1.0.sif PanGenie -a 5"
 
 
-# PanGenie command to be used for not yet released version of PanGenie (leave empty for now)
+# PanGenie command to be used for all PanGenie versions >= v3.0.0
 pangenie-modules: []
 
 # Downsampling coverages for leave-one-out experiment. If reads shall not be downsampled, leave empty.
@@ -101,12 +99,16 @@ BED file defining repeat regions. See `` resources/ `` folder for files that can
 
 We have already produced input reference panels for several datasets from high-quality, haplotype-resolved assemblies that can be used as input to this pipeline. Existing datasets can be found here:
 
-| Dataset | multi-allelic graph VCF        |  bi-allelic callset VCF         | 
-|-------------| :-------------: |:-------------:| 
-| HGSVC-GRCh38 (freeze3, 64 haplotypes) | [graph-VCF](https://zenodo.org/record/7763717/files/pav-panel-freeze3.vcf.gz?download=1) | [callset-VCF](https://zenodo.org/record/7763717/files/pav-calls-freeze3.vcf.gz?download=1) | 
-| HGSVC-GRCh38 (freeze4, 64 haplotypes) |  [graph-VCF](https://zenodo.org/record/7763717/files/pav-panel-freeze4.vcf.gz?download=1)     | [callset-VCF](https://zenodo.org/record/7763717/files/pav-calls-freeze4.vcf.gz?download=1) | 
-| HPRC-GRCh38 (88 haplotypes) | [graph-VCF](https://zenodo.org/record/6797328/files/cactus_filtered_ids.vcf.gz?download=1)     |  [callset-VCF](https://zenodo.org/record/6797328/files/cactus_filtered_ids_biallelic.vcf.gz?download=1)    | 
-| HPRC-CHM13 (88 haplotypes) | [graph-VCF](https://zenodo.org/record/7839719/files/chm13_cactus_filtered_ids.vcf.gz?download=1) | [callset-VCF](https://zenodo.org/record/7839719/files/chm13_cactus_filtered_ids_biallelic.vcf.gz?download=1)   | 
+
+| Dataset | multi-allelic graph VCF        |  bi-allelic callset VCF         |  
+|-------------| :-------------: |:-------------:|
+| HGSVC-GRCh38 (freeze3, 64 haplotypes) | [graph-VCF](https://zenodo.org/record/7763717/files/pav-panel-freeze3.vcf.gz?download=1) | [callset-VCF](https://zenodo.org/record/7763717/files/pav-calls-freeze3.vcf.gz?download=1) |
+| HGSVC-GRCh38 (freeze4, 64 haplotypes) |  [graph-VCF](https://zenodo.org/record/7763717/files/pav-panel-freeze4.vcf.gz?download=1)     | [callset-VCF](https://zenodo.org/record/7763717/files/pav-calls-freeze4.vcf.gz?download=1) |
+| HPRC-GRCh38 (88 haplotypes) | [graph-VCF](https://zenodo.org/record/6797328/files/cactus_filtered_ids.vcf.gz?download=1)     |  [callset-VCF](https://zenodo.org/record/6797328/files/cactus_filtered_ids_biallelic.vcf.gz?download=1)    |
+| HPRC-CHM13 (88 haplotypes) | [graph-VCF](https://zenodo.org/record/7839719/files/chm13_cactus_filtered_ids.vcf.gz?download=1) | [callset-VCF](https://zenodo.org/record/7839719/files/chm13_cactus_filtered_ids_biallelic.vcf.gz?download=1)   |
+| HGSVC3 + HPRC (CHM13, 214 haplotypes) | [graph-VCF](https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC3/release/Genotyping_1kGP/PanGenie-genotypes/1.0/MC_hgsvc3-hprc_chm13_filtered_bubbles.vcf.gz) | [callset-VCF](https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/HGSVC3/release/Genotyping_1kGP/PanGenie-genotypes/1.0/MC_hgsvc3-hprc_chm13_filtered_decomposed.vcf.gz)   |
+| HPRC2-CHM13 (462 haplotypes) | [graph-VCF](https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2026_03_30_pangenie/mc_filtered_ids.vcf.gz) | [callset-VCF](https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2026_03_30_pangenie/mc_filtered_ids_biallelic.vcf.gz)   |
+
 
 
 
@@ -116,8 +118,3 @@ Paths to input files needed must be specified in the config file: `` config/conf
 The whole pipeline can then be run using the following command:
 
 ``  snakemake --use-conda -j <number of cores>  `` 
-
-Alternatively, different parts of the pipeline can be run individually:
-
-* ``  snakemake leave_one_out --use-conda -j <number of cores>  ``  runs the PanGenie leave-one-out experiment.
-* ``  snakemake population_typing --use-conda -j <number of cores>  `` runs PanGenie on all 3,202 genomes of the 1000 Genomes Project and analyzes the results. This also includes defining a positive (=strict) and filtered (=lenient) set of genotypes.
