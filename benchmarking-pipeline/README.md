@@ -1,4 +1,4 @@
-# PanGenie genotyping pipeline
+# PanGenie benchmarking pipeline
 
 This pipeline can be used to perform different genotyping experiments with PanGenie. 
 
