@@ -13,5 +13,6 @@ callsets:
   sample_info: "/path/to/sample-info.tsv"
   # prefix used for chromosome names in FASTA file. 
   reference_prefix: "chr"
-  # Choose between: CHM13 | GRCh38
-  reference_version: "CHM13"
+  # List samples to be excluded from the graph
+  exclude: 
+    - GRCh38

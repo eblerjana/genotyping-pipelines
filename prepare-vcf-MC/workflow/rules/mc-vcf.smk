@@ -40,9 +40,9 @@ rule filter_vcf:
 		mem_mb=20000,
 		walltime="01:59:00"
 	params:
-		reference_to_ignore = lambda wildcards: "CHM13" if CALLSETS[wildcards.caller]['reference_version'] == "GRCh38" else "GRCh38"
+		exclude = ','.join(CALLSETS[wildcards.caller]['exclude'])
 	shell:
-		"bcftools view --samples ^{params.reference_to_ignore} --force-samples  {input} | bcftools view --min-ac 1 | python3 workflow/scripts/filter-vcf.py {min_frac} 2> {log} 1> {output}"
+		"bcftools view --samples ^{params.exclude} --force-samples  {input} | bcftools view --min-ac 1 | python3 workflow/scripts/filter-vcf.py {min_frac} 2> {log} 1> {output}"
 
 
 # remove alternative alleles that are not covered by any haplotype
