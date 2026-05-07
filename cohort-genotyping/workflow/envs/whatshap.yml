@@ -1,0 +1,7 @@
+name: whatshap
+dependencies:
+  - gsl=2.5
+  - whatshap=2.8
+  - bcftools
+  - samtools
+  - bedtools

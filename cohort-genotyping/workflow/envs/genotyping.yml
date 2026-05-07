@@ -1,0 +1,8 @@
+name: genotyping
+dependencies:
+  - bcftools
+  - bedtools
+  - matplotlib
+  - pyfaidx
+  - seaborn
+  - rtg-tools

@@ -1,0 +1,57 @@
+from snakemake.utils import validate
+
+configfile: "config/config.yaml"
+validate(config, "config.schema.yaml")
+
+include: "rules/parse-inputs.smk"
+include: "rules/prepare-mc-vcf.smk"
+include: "rules/filter-genotypes.smk"
+include: "rules/genotype-cohort.smk"
+include: "rules/merge-vcfs.smk"
+include: "rules/phase-genotypes-ref.smk"
+include: "rules/create-consensus-haplotypes.smk"
+include: "rules/polish-haplotypes.smk"
+
+
+def input_phasing(wildcards):
+	results = []
+	if MAPS:
+		results.extend(expand("{results}/phasing/pangenie_all-samples_unfiltered_shapeit.bcf", results = config["outname"]))
+		results.extend(expand("{results}/unpolished-haplotypes/pangenie_all-samples_unfiltered_unpolished.agc", results = config["outname"]))
+	return results 
+
+
+rule all:
+	input:
+		expand("{results}/genotyping/pangenie_all-samples_unfiltered.vcf.gz", results = config["outname"]),
+		expand("{results}/genotyping/merged-region-wise/pangenie_{region}_genotypes_deleted.txt", results = config["outname"], region = MERGING_REGIONS),
+		expand("{results}/filtering/all_genotyping_statistics.tsv", results = config["outname"]),
+		expand("{results}/filtering/pangenie_plot.log", results = config["outname"]),
+		expand("{results}/filtering/pangenie_all-samples_{filter}.vcf.gz", results = config["outname"], filter="filtered"),
+		input_phasing,
+		expand("{results}/polishing/pangenie_all-samples_unfiltered/all/polished/pangenie_all-samples_unfiltered_25_polished.agc", results = config["outname"])
+
+
+rule prepare_mc_vcf:
+	input:
+		expand("{results}/genotyping/input-panel-ready.txt", results = config["outname"])
+
+rule genotyping:
+	input:
+		expand("{results}/genotyping/pangenie_all-samples_unfiltered.vcf.gz", results = config["outname"]),
+		expand("{results}/genotyping/merged-region-wise/pangenie_{region}_genotypes_deleted.txt", results = config["outname"], region = MERGING_REGIONS)
+
+rule filtering:
+	input:
+		expand("{results}/filtering/all_genotyping_statistics.tsv", results = config["outname"]),
+		expand("{results}/filtering/pangenie_plot.log", results = config["outname"]),
+		expand("{results}/filtering/pangenie_all-samples_{filter}.vcf.gz", results = config["outname"], filter="filtered"),
+		expand("{results}/genotyping/merged-region-wise/pangenie_{region}_genotypes_deleted.txt", results = config["outname"], region = MERGING_REGIONS)
+rule phasing:
+	input:
+		input_phasing
+
+
+rule polishing:
+	input:
+		expand("{results}/polishing/pangenie_all-samples_unfiltered/all/polished/pangenie_all-samples_unfiltered_25_polished.agc", results = config["outname"])

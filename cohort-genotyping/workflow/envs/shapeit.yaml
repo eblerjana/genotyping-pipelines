@@ -1,0 +1,7 @@
+name: shapeit
+dependencies:
+  - bcftools
+  - bedtools
+  - samtools
+  - pyfaidx
+  - shapeit5

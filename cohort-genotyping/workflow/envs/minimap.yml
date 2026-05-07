@@ -1,0 +1,4 @@
+name: minimap
+dependencies:
+  - minimap2
+  - samtools

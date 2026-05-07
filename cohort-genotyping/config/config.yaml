@@ -1,0 +1,46 @@
+
+# Optional: PanGenie ready VCFs
+panel_bi: ""
+panel_multi: ""
+
+# Optional: Minigraph Cactus GFA/VCF
+mc_vcf: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/hprc-v2.0-mc-chm13.vcf.gz"
+mc_gfa: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/hprc-v2.0-mc-chm13.gfa.gz"
+samples_to_exclude:
+        - GRCh38
+
+# reference genome
+reference: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/chm13v2.0_maskedY_rCRS.fa"
+# reference used for CRAM long reads
+cram_ref: "/gpfs/project/projects/medbioinf/data/1000G-ont/1KG_ONT_VIENNA_t2t.fa"
+# sample sheet
+sample-sheet: "1kg-hprc2-sample-sheet-withONT.tsv" 
+# name of the output folder
+outname: "results-hprc2-full"
+
+
+# genetic maps to be used for phasing.
+maps:
+ chr10: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr10_noMask.scaled.gmap.gz"
+ chr11: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr11_noMask.scaled.gmap.gz"
+ chr12: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr12_noMask.scaled.gmap.gz"
+ chr13: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr13_noMask.scaled.gmap.gz"
+ chr14: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr14_noMask.scaled.gmap.gz"
+ chr15: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr15_noMask.scaled.gmap.gz"
+ chr16: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr16_noMask.scaled.gmap.gz"
+ chr17: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr17_noMask.scaled.gmap.gz"
+ chr18: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr18_noMask.scaled.gmap.gz"
+ chr19: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr19_noMask.scaled.gmap.gz"
+ chr1: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr1_noMask.scaled.gmap.gz"
+ chr20: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr20_noMask.scaled.gmap.gz"
+ chr21: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr21_noMask.scaled.gmap.gz"
+ chr22: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr22_noMask.scaled.gmap.gz"
+ chr2: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr2_noMask.scaled.gmap.gz"
+ chr3: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr3_noMask.scaled.gmap.gz"
+ chr4: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr4_noMask.scaled.gmap.gz"
+ chr5: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr5_noMask.scaled.gmap.gz"
+ chr6: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr6_noMask.scaled.gmap.gz"
+ chr7: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr7_noMask.scaled.gmap.gz"
+ chr8: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr8_noMask.scaled.gmap.gz"
+ chr9: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chr9_noMask.scaled.gmap.gz"
+ chrX: "/gpfs/project/projects/medbioinf/users/ebler/haplotype-sampling/companion-paper/data/recombination_maps/chrX_noMask.scaled.gmap.gz"

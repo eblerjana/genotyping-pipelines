@@ -1,0 +1,35 @@
+$schema: "https://json-schema.org/draft-07/schema#"
+description: Input parameters
+properties:
+  panel_bi:
+    type: string
+    default: ""
+    description: Path to PanGenie-ready biallelic panel VCF
+  panel_multi:
+    type: string
+    default: ""
+    description: Path to PanGenie-ready multiallelic panel VCF
+  mc_vcf:
+    type: string
+    default: ""
+    description: Path to the MC VCF
+  mc_gfa:
+    type: string
+    default: ""
+    description: Path to the MC GFA
+  samples_to_exclude:
+    type: array
+    default: []
+  reference:
+    type: string
+    description: Path to reference FASTA
+  sample-info:
+    type: string
+    description: Path to sample sheet
+  maps:
+    type: object
+    default: {}
+
+required:
+  - reference
+  - sample-sheet

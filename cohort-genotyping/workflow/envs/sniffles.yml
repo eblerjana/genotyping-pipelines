@@ -1,0 +1,7 @@
+name: sniffles
+dependencies:
+  - samtools
+  - bcftools
+  - sniffles=2.6.1
+  - gsl=2.5
+  - bedtools

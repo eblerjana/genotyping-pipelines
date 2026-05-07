@@ -18,8 +18,6 @@ for callset in CALLSETS.keys():
 
 
 include: 'rules/leave-one-out.smk'
-include: 'rules/population-typing.smk'
-include: 'rules/population-evaluation.smk'
 
 coverages = ['full'] + config['downsampling']
 versions_to_run = [v for v in config['pangenie'].keys()] + [v for v in config['pangenie-modules'].keys()]
@@ -41,20 +39,7 @@ rule all:
 		leave_one_out_plots,
 		expand("{results}/leave-one-out/{callset}/plots/resources/resources_{callset}-{coverage}.pdf", results = config['results'], callset = [c for c in config['callsets'].keys()], coverage = coverages),
 
-		expand("{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.vcf.gz", results = config['results'], callset = [c for c in config['callsets'].keys()], what = ['bi'], version = versions_to_run, coverage = coverages),
-		expand("{results}/population-typing/{callset}/sample-index.tsv", results = config['results'], callset = [c for c in config['callsets'].keys()]),
-		expand("{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv", results = config['results'], callset = [c for c in config['callsets'].keys()], version = versions_to_run, coverage = ['full']),
-		expand("{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/filtered/all-samples_bi_all_lenient.vcf.gz", results = config['results'], callset = [c for c in config['callsets'].keys()], version = versions_to_run, coverage = ['full'])
-
 rule leave_one_out:
 	input:
 		leave_one_out_plots,
 		expand("{results}/leave-one-out/{callset}/plots/resources/resources_{callset}-{coverage}.pdf", results = config['results'], callset = [c for c in config['callsets'].keys()], coverage = coverages),
-
-
-rule population_typing:
-	input:
-		expand("{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/whole-genome/all-samples_{what}_all.vcf.gz", results = config['results'], callset = [c for c in config['callsets'].keys()], what = ['bi'], version = versions_to_run, coverage = coverages),
-		expand("{results}/population-typing/{callset}/sample-index.tsv", results = config['results'], callset = [c for c in config['callsets'].keys()]),
-		expand("{results}/population-typing/{callset}/{version}/{coverage}/evaluation/statistics/plot_bi_all_filters.tsv", results = config['results'], callset = [c for c in config['callsets'].keys()], version = versions_to_run, coverage = ['full']),
-		expand("{results}/population-typing/{callset}/{version}/{coverage}/merged-vcfs/filtered/all-samples_bi_all_lenient.vcf.gz", results = config['results'], callset = [c for c in config['callsets'].keys()], version = versions_to_run, coverage = ['full'])

@@ -64,13 +64,13 @@ callsets:
 reads: "resources/genotyping-pilot-reads.tsv"
 
 
-# PanGenie command. Different versions can be run by listing several commandlines
+# PanGenie commands to be used for all versions < v3.0.0
 pangenie: {}
 
 
-# PanGenie command to be used for not yet released version of PanGenie (leave empty for now)
+# PanGenie command to be used for all PanGenie versions >= v3.0.0
 pangenie-modules:
- pangenie-109: "module load Singularity && singularity exec --bind /:/hilbert eblerjana_eblerjana_pangenie-v3.0.3.sif PanGenie -a 109"
+ pangenie-sampling: "PanGenie"
 
 
 # Downsampling coverages for leave-one-out experiment. If reads shall not be downsampled, leave empty.

@@ -1,0 +1,5 @@
+name: bwa
+dependencies:
+  - bwa
+  - samtools
+  - agc
